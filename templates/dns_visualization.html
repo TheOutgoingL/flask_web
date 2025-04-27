@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS解析流程可视化</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/vis-network/9.1.6/dist/dist/vis-network.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vis-network/9.1.6/standalone/umd/vis-network.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            border: 1px solid black;
+        }
+
+        th, td {
+            border: 1px solid black;
+            text-align: center;
+            padding: 5px;
+        }
+
+        #loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 4px;
+            background-color: red;
+            z-index: 9999;
+            transition: width 0.4s ease;
+        }
+
+        .query-section {
+            width: 1100px;
+            padding: 20px;
+            text-align: center;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .query-section input {
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        .query-section button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 50px;
+        }
+
+        .query-section h3 {
+            margin-right: 10px;
+            position: relative;
+            right: 0;
+        }
+
+        .node-info {
+            width: 310px;
+            height: 78px;
+            border: 2px solid lightgray;
+            margin-left: 10px;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .node-info label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .node-info input {
+            width: 200px;
+            margin-bottom: 10px;
+            padding: 4px;
+        }
+
+        .query-records {
+            height: auto;
+            position: fixed;
+            z-index: 2;
+            left: 20px;
+            top: 200px;
+            bottom: 50px;
+        }
+
+        .colorTags {
+            height: auto;
+            position: fixed;
+            z-index: 2;
+            right: 20px;
+            top: 200px;
+            bottom: 50px;
+        }
+
+        #mynetwork {
+            width: 1200px;
+            height: 800px;
+            box-shadow: 10px 5px 5px lightgray,
+            -10px 5px 5px lightgray,
+            10px -5px 5px lightgray,
+            -10px -5px 5px lightgray;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-upload {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .file-upload:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div id="loading-bar"></div>
+<div>
+    <div class="query-section">
+        <label for="fileInput" class="file-upload">选择日志文件</label>
+        <input type="file" id="fileInput" accept=".txt">
+        <button onclick="processLogFile()">可视化DNS解析</button>
+        <h3>双击节点<br>查看信息</h3>
+        <div class="node-info">
+            <div style="margin-bottom: 2px">
+                <label for="node_name">节点名称</label>
+                <input type="text" id="node_name" class="form-control" aria-describedby="emailHelp">
+            </div>
+            <div>
+                <label for="group_name">节点标签</label>
+                <input type="text" id="group_name" class="form-control" aria-describedby="emailHelp">
+            </div>
+        </div>
+    </div>
+    <HR style="border:1px double #987cb9" width=100% color=#987cb9 SIZE=1>
+    <div style="display: flex; margin-top: 30px;">
+        <div class="query-records">
+            <table class="showRecords">
+                <tr>
+                    <th>解析信息</th>
+                    <th>值</th>
+                </tr>
+                <tr>
+                    <td>域名</td>
+                    <td id="domain-name"></td>
+                </tr>
+                <tr>
+                    <td>解析状态</td>
+                    <td id="resolution-status"></td>
+                </tr>
+                <tr>
+                    <td>解析步骤数</td>
+                    <td id="total-steps"></td>
+                </tr>
+            </table>
+            <div id="records"></div>
+        </div>
+        <div id="mynetwork"></div>
+        <div class="colorTags">
+            <table>
+                <tr>
+                    <th>颜色</th>
+                    <th>标签</th>
+                </tr>
+                <tr>
+                    <td bgcolor="lightgreen"></td>
+                    <td>权威服务器(NS)</td>
+                </tr>
+                <tr>
+                    <td bgcolor="lightblue"></td>
+                    <td>NS服务器IP</td>
+                </tr>
+                <tr>
+                    <td bgcolor="pink"></td>
+                    <td>CNAME记录</td>
+                </tr>
+                <tr>
+                    <td bgcolor="#B5BEED"></td>
+                    <td>查询域名</td>
+                </tr>
+                <tr>
+                    <td bgcolor="yellow"></td>
+                    <td>A记录(IP地址)</td>
+                </tr>
+                <tr>
+                    <td bgcolor="skyblue"></td>
+                    <td>父域</td>
+                </tr>
+                <tr>
+                    <td bgcolor="#FF9999"></td>
+                    <td>错误</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <HR style="border:3px double #987cb9" width=1200px color=#987cb9 SIZE=3>
+</div>
+
+<script>
+    // 全局变量存储解析后的数据
+    let dnsData = null;
+    
+    // 处理上传的日志文件
+    function processLogFile() {
+        const fileInput = document.getElementById('fileInput');
+        const loadingBar = document.getElementById('loading-bar');
+        
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('请先选择日志文件');
+            return;
+        }
+        
+        // 显示加载条
+        loadingBar.style.width = '50%';
+        
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const content = e.target.result;
+            // 查找JSON数据部分
+            const jsonStartIndex = content.indexOf('================ 最终解析结果（数据库格式） ================');
+            if (jsonStartIndex === -1) {
+                alert('无法在日志文件中找到解析结果数据');
+                loadingBar.style.width = '0';
+                return;
+            }
+            
+            const jsonDataStart = content.indexOf('{', jsonStartIndex);
+            const jsonDataEnd = content.indexOf('================ 解析路径摘要 ================', jsonDataStart);
+            
+            if (jsonDataStart === -1 || jsonDataEnd === -1) {
+                alert('无法解析日志文件中的JSON数据');
+                loadingBar.style.width = '0';
+                return;
+            }
+            
+            const jsonStr = content.substring(jsonDataStart, jsonDataEnd).trim();
+            
+            try {
+                dnsData = JSON.parse(jsonStr);
+                visualizeDnsData(dnsData);
+                
+                // 完成加载
+                loadingBar.style.width = '100%';
+                setTimeout(() => {
+                    loadingBar.style.width = '0';
+                }, 500);
+            } catch (error) {
+                console.error('解析JSON数据失败:', error);
+                alert('解析JSON数据失败: ' + error.message);
+                loadingBar.style.width = '0';
+            }
+        };
+        
+        reader.onerror = function() {
+            alert('读取文件失败');
+            loadingBar.style.width = '0';
+        };
+        
+        reader.readAsText(file);
+    }
+    
+    // 可视化DNS数据
+    function visualizeDnsData(data) {
+        if (!data || !data.queries || !data.dns_records || !data.domain_dependencies) {
+            alert('数据格式不正确');
+            return;
+        }
+        
+        // 更新基本信息
+        const query = data.queries[0];
+        document.getElementById('domain-name').textContent = query.domain_name;
+        document.getElementById('resolution-status').textContent = query.resolution_status;
+        document.getElementById('total-steps').textContent = query.total_steps;
+        
+        // 创建节点和边
+        const nodes = [];
+        const edges = [];
+        const nodeIds = new Set();
+        
+        // 辅助函数检查节点是否已存在
+        const nodeExists = (id) => nodeIds.has(id);
+        
+        // 辅助函数检查边是否已存在
+        const edgeExists = (from, to) => {
+            return edges.some(edge => edge.from === from && edge.to === to);
+        };
+        
+        // 添加域名节点
+        function addDomainNode(domain, group = 'domain') {
+            const id = `domain_${domain}`;
+            if (!nodeExists(id)) {
+                nodes.push({
+                    id: id,
+                    label: domain,
+                    group: group
+                });
+                nodeIds.add(id);
+            }
+            return id;
+        }
+        
+        // 添加父域节点
+        data.domain_dependencies.forEach(dep => {
+            const domainId = addDomainNode(dep.domain);
+            const parentId = addDomainNode(dep.parent_domain, 'parent_domain');
+            
+            if (!edgeExists(domainId, parentId)) {
+                edges.push({
+                    from: domainId,
+                    to: parentId,
+                    label: 'isSubdomainOf',
+                    arrows: 'to'
+                });
+            }
+        });
+        
+        // 处理DNS记录
+        data.dns_records.forEach(record => {
+            const queryDomainId = addDomainNode(record.query_domain);
+            
+            // 根据记录类型处理
+            switch(record.record_type) {
+                case 'NS':
+                    // 添加NS记录
+                    if (Array.isArray(record.record_values)) {
+                        record.record_values.forEach(ns => {
+                            const nsId = `ns_${ns}`;
+                            if (!nodeExists(nsId)) {
+                                nodes.push({
+                                    id: nsId,
+                                    label: ns,
+                                    group: 'ns'
+                                });
+                                nodeIds.add(nsId);
+                            }
+                            
+                            if (!edgeExists(queryDomainId, nsId)) {
+                                edges.push({
+                                    from: queryDomainId,
+                                    to: nsId,
+                                    label: 'hasNS',
+                                    arrows: 'to'
+                                });
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'A':
+                    // 添加A记录
+                    if (Array.isArray(record.record_values)) {
+                        record.record_values.forEach(ip => {
+                            const ipId = `ip_${ip}`;
+                            if (!nodeExists(ipId)) {
+                                nodes.push({
+                                    id: ipId,
+                                    label: ip,
+                                    group: 'ip'
+                                });
+                                nodeIds.add(ipId);
+                            }
+                            
+                            if (!edgeExists(queryDomainId, ipId)) {
+                                edges.push({
+                                    from: queryDomainId,
+                                    to: ipId,
+                                    label: 'hasIP',
+                                    arrows: 'to'
+                                });
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'CNAME':
+                    // 添加CNAME记录
+                    const cnameTarget = record.record_values;
+                    const cnameId = `cname_${cnameTarget}`;
+                    if (!nodeExists(cnameId)) {
+                        nodes.push({
+                            id: cnameId,
+                            label: cnameTarget,
+                            group: 'cname'
+                        });
+                        nodeIds.add(cnameId);
+                    }
+                    
+                    if (!edgeExists(queryDomainId, cnameId)) {
+                        edges.push({
+                            from: queryDomainId,
+                            to: cnameId,
+                            label: 'hasCNAME',
+                            arrows: 'to'
+                        });
+                    }
+                    break;
+                    
+                case 'ERROR':
+                    // 添加错误节点
+                    const errorId = `error_${record.step_number}`;
+                    if (!nodeExists(errorId)) {
+                        nodes.push({
+                            id: errorId,
+                            label: record.note,
+                            group: 'error'
+                        });
+                        nodeIds.add(errorId);
+                    }
+                    
+                    if (!edgeExists(queryDomainId, errorId)) {
+                        edges.push({
+                            from: queryDomainId,
+                            to: errorId,
+                            label: 'error',
+                            arrows: 'to'
+                        });
+                    }
+                    break;
+            }
+            
+            // 添加服务器节点（如果有）
+            if (record.server_used && record.server_used.trim() !== '') {
+                const serverParts = record.server_used.match(/([^(]+)\s*\(([^)]+)\)/);
+                if (serverParts) {
+                    const serverName = serverParts[1].trim();
+                    const serverIP = serverParts[2].trim();
+                    
+                    // 添加服务器节点
+                    const serverId = `server_${serverName}`;
+                    if (!nodeExists(serverId)) {
+                        nodes.push({
+                            id: serverId,
+                            label: serverName,
+                            group: 'ns'
+                        });
+                        nodeIds.add(serverId);
+                    }
+                    
+                    // 添加服务器IP节点
+                    const serverIpId = `server_ip_${serverIP}`;
+                    if (!nodeExists(serverIpId)) {
+                        nodes.push({
+                            id: serverIpId,
+                            label: serverIP,
+                            group: 'ns_ip'
+                        });
+                        nodeIds.add(serverIpId);
+                    }
+                    
+                    // 连接服务器和IP
+                    if (!edgeExists(serverId, serverIpId)) {
+                        edges.push({
+                            from: serverId,
+                            to: serverIpId,
+                            label: 'hasIP',
+                            arrows: 'to'
+                        });
+                    }
+                    
+                    // 连接查询和服务器
+                    if (!edgeExists(queryDomainId, serverId)) {
+                        edges.push({
+                            from: queryDomainId,
+                            to: serverId,
+                            label: 'queriedBy',
+                            arrows: 'to',
+                            dashes: true
+                        });
+                    }
+                }
+            }
+        });
+        
+        // 处理Glue记录
+        data.glue_records.forEach(glue => {
+            const nsId = `ns_${glue.ns_name}`;
+            const ipId = `server_ip_${glue.ip_address}`;
+            
+            if (!nodeExists(nsId)) {
+                nodes.push({
+                    id: nsId,
+                    label: glue.ns_name,
+                    group: 'ns'
+                });
+                nodeIds.add(nsId);
+            }
+            
+            if (!nodeExists(ipId)) {
+                nodes.push({
+                    id: ipId,
+                    label: glue.ip_address,
+                    group: 'ns_ip'
+                });
+                nodeIds.add(ipId);
+            }
+            
+            if (!edgeExists(nsId, ipId)) {
+                edges.push({
+                    from: nsId,
+                    to: ipId,
+                    label: 'hasGlue',
+                    arrows: 'to'
+                });
+            }
+        });
+        
+        // 创建网络图
+        const container = document.getElementById('mynetwork');
+        const visNodes = new vis.DataSet(nodes);
+        const visEdges = new vis.DataSet(edges);
+        const visData = {nodes: visNodes, edges: visEdges};
+        
+        const options = {
+            groups: {
+                domain: {color: {background: '#B5BEED'}, font: {multi: 'md', size: 16}},
+                parent_domain: {shape: 'box', color: {background: 'skyblue'}},
+                ns: {shape: 'box', color: {background: 'lightgreen'}},
+                ns_ip: {shape: 'box', color: {background: 'lightblue'}},
+                ip: {shape: 'box', color: {background: 'yellow'}},
+                cname: {shape: 'box', color: {background: 'pink'}},
+                error: {shape: 'box', color: {background: '#FF9999'}}
+            },
+            physics: {
+                barnesHut: {
+                    springLength: 180,
+                    springConstant: 0.05,
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.1,
+                    damping: 0.09
+                }
+            },
+            edges: {
+                smooth: true,
+                arrows: {
+                    to: {
+                        enabled: true,
+                    }
+                }
+            },
+            interaction: {
+                zoomView: false,
+                navigationButtons: true,
+                keyboard: true
+            }
+        };
+        
+        const network = new vis.Network(container, visData, options);
+        
+        // 添加键盘事件监听器
+        let ctrlPressed = false;
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey) {
+                ctrlPressed = true;
+                network.setOptions({interaction: {zoomView: true}});
+            }
+        });
+        document.addEventListener('keyup', function (event) {
+            if (!event.ctrlKey) {
+                ctrlPressed = false;
+                network.setOptions({interaction: {zoomView: false}});
+            }
+        });
+        
+        // 添加双击事件监听器
+        network.on('doubleClick', function (params) {
+            if (params.nodes.length > 0) {
+                const clickedNode = visNodes.get(params.nodes[0]);
+                const groupMap = {
+                    'ns_ip': 'NS服务器IP',
+                    'ip': 'A记录(IP地址)',
+                    'domain': '查询域名',
+                    'ns': '权威服务器(NS)',
+                    'parent_domain': '父域',
+                    'cname': 'CNAME记录',
+                    'error': '错误'
+                };
+                document.getElementById('node_name').value = clickedNode.label;
+                document.getElementById('group_name').value = groupMap[clickedNode.group] || clickedNode.group;
+            }
+        });
+        
+        // 监听节点拖动事件
+        network.on('dragStart', function (params) {
+            if (params.nodes.length > 0) {
+                network.storePositions();
+                options.physics.barnesHut.springLength = 280;
+                network.setOptions(options);
+            }
+        });
+        
+        // 拖动结束还原边的长度
+        network.on('dragEnd', function (params) {
+            if (params.nodes.length > 0) {
+                network.storePositions();
+                options.physics.barnesHut.springLength = 180;
+                network.setOptions(options);
+            }
+        });
+        
+        // 添加解析步骤记录
+        const recordsDiv = document.getElementById('records');
+        recordsDiv.innerHTML = '<h3>解析步骤:</h3>';
+        
+        data.dns_records.forEach((step, index) => {
+            const stepDiv = document.createElement('div');
+            stepDiv.style.marginBottom = '10px';
+            stepDiv.style.borderBottom = '1px solid #ddd';
+            stepDiv.style.paddingBottom = '5px';
+            
+            let recordValues = '';
+            if (Array.isArray(step.record_values)) {
+                if (step.record_values.length > 3) {
+                    recordValues = `${step.record_values.slice(0, 3).join(', ')}... (共${step.record_values.length}条)`;
+                } else {
+                    recordValues = step.record_values.join(', ');
+                }
+            } else {
+                recordValues = step.record_values;
+            }
+            
+            // stepDiv.innerHTML = `
+            //     <strong>步骤 ${index + 1}:</strong> [${step.record_type}] ${step.query_domain} → ${recordValues}<br>
+            //     <span style="margin-left: 20px;">服务器: ${step.server_used}</span><br>
+            //     <span style="margin-left: 20px;">说明: ${step.note}</span>
+            // `;
+            
+            recordsDiv.appendChild(stepDiv);
+        });
+    }
+</script>
+</body>
+</html>

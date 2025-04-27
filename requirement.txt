@@ -1,0 +1,4 @@
+flask
+dnspython
+pymysql
+flask-sqlalchemy

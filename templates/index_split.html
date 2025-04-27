@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Info Query</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/vis-network/9.1.6/dist/dist/vis-network.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vis-network/9.1.6/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<div id="loading-bar"></div> <!-- 加载条 -->
+<div>
+    <div class="query-section">
+        <input type="text" id="domain" placeholder="Enter domain" value="{{ domain if domain else '' }}">
+        <button onclick="queryDomain()">查询</button>
+        <h3>双击节点<br>查看信息</h3>
+        <div class="node-info">
+            <div style="margin-bottom: 2px">
+                <label for="node_name">节点名称</label>
+                <input type="text" id="node_name" class="form-control" aria-describedby="emailHelp">
+            </div>
+            <div>
+                <label for="group_name">节点标签</label>
+                <input type="text" id="group_name" class="form-control" aria-describedby="emailHelp">
+            </div>
+        </div>
+{#        <div>#}
+{#            <button onclick="switchModel()" id="switchButton">聚合</button>#}
+{#        </div>#}
+    </div>
+    <HR style="border:1px double #987cb9" width=100% color=#987cb9 SIZE=1>
+    <div style="display: flex; margin-top: 30px;">
+        <div class="query-records">
+            <table class="showRecords">
+                <tr>
+                    <th>Tags</th>
+                    <th>Show</th>
+                </tr>
+                <tr>
+                    <td>已查询DNS数量</td>
+                    <td id="server-count"></td> <!-- 添加ID -->
+                </tr>
+            </table>
+            <div id="records"></div>
+        </div>
+        <div id="mynetwork"></div>
+        <div class="colorTags">
+            <table>
+                <tr>
+                    <th>Color</th>
+                    <th>Tags</th>
+                </tr>
+                <tr>
+                    <td bgcolor="lightgreen"></td>
+                    <td>权威服务器</td>
+                </tr>
+                <tr>
+                    <td bgcolor="lightblue"></td>
+                    <td>授权服务IP地址</td>
+                </tr>
+                <tr>
+                    <td bgcolor="pink"></td>
+                    <td>CNAME</td>
+                </tr>
+                <tr>
+                    <td bgcolor="#B5BEED"></td>
+                    <td>DNS服务器</td>
+                </tr>
+                <tr>
+                    <td bgcolor="yellow"></td>
+                    <td>域名IP地址</td>
+                </tr>
+                <tr>
+                    <td bgcolor="skyblue"></td>
+                    <td>找到NS记录的服务器</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <HR style="border:3px double #987cb9" width=1200px color=#987cb9 SIZE=3>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

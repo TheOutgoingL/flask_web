@@ -11,9 +11,7 @@
 
 1.  安装相关的python库：pip install -r requirement.txt
 2. 
-    # 配置数据库连接
-    # password = quote_plus('cnic@2023')
-    # app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{password}@localhost:33333/flask_DNSInfo'
+
 
 #### 使用说明
 

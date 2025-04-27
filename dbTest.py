@@ -28,7 +28,9 @@
 #         print(rs.fetchone())
 #
 
-
+    # 配置数据库连接
+    # password = quote_plus('cnic@2023')
+    # app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{password}@localhost:33333/flask_DNSInfo'
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from sqlalchemy import text

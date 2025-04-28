@@ -1,0 +1,268 @@
+{
+  "www.jd.com": {
+    "解析步骤": [
+      {
+        "步骤": 1,
+        "查询域名": ".",
+        "父域": "null",
+        "最近已解析父域": ".",
+        "使用的NS服务器": "a.root-servers.net (198.41.0.4)",
+        "查询内容": "com",
+        "查询耗时": "202.53ms",
+        "结果": {
+          "类型": "NS委派",
+          "记录": [
+            "l.gtld-servers.net",
+            "j.gtld-servers.net",
+            "h.gtld-servers.net",
+            "d.gtld-servers.net",
+            "b.gtld-servers.net",
+            "f.gtld-servers.net",
+            "k.gtld-servers.net",
+            "m.gtld-servers.net",
+            "i.gtld-servers.net",
+            "g.gtld-servers.net",
+            "a.gtld-servers.net",
+            "c.gtld-servers.net",
+            "e.gtld-servers.net"
+          ]
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 com 的 NS 委派记录"
+      },
+      {
+        "步骤": 2,
+        "查询域名": "com",
+        "父域": ".",
+        "最近已解析父域": "com",
+        "使用的NS服务器": "l.gtld-servers.net (192.41.162.30)",
+        "查询内容": "jd.com",
+        "查询耗时": "233.87ms",
+        "结果": {
+          "类型": "NS委派",
+          "记录": [
+            "ns1.jdcache.com",
+            "ns2.jdcache.com",
+            "ns3.jdcache.com",
+            "ns4.jdcache.com",
+            "ns5.jdcache.com"
+          ]
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 jd.com 的 NS 委派记录"
+      },
+      {
+        "步骤": 3,
+        "查询域名": "www.jd.com",
+        "父域": "jd.com",
+        "最近已解析父域": "jd.com",
+        "使用的NS服务器": "ns1.jdcache.com (111.13.28.10)",
+        "查询内容": "www.jd.com",
+        "查询耗时": "40.05ms",
+        "结果": {
+          "类型": "CNAME",
+          "记录": "www.jd.com → www.jd.com.gslb.qianxun.com"
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 CNAME 记录，指向 www.jd.com.gslb.qianxun.com"
+      },
+      {
+        "步骤": 4,
+        "查询域名": "qianxun.com",
+        "父域": "com",
+        "最近已解析父域": "com",
+        "使用的NS服务器": "l.gtld-servers.net (192.41.162.30)",
+        "查询内容": "qianxun.com",
+        "查询耗时": "251.61ms",
+        "结果": {
+          "类型": "NS委派",
+          "记录": [
+            "ns1.jdcache.com",
+            "ns2.jdcache.com",
+            "ns3.jdcache.com",
+            "ns4.jdcache.com",
+            "ns5.jdcache.com"
+          ]
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 qianxun.com 的 NS 委派记录"
+      },
+      {
+        "步骤": 5,
+        "查询域名": "gslb.qianxun.com",
+        "父域": "qianxun.com",
+        "最近已解析父域": "qianxun.com",
+        "使用的NS服务器": "ns1.jdcache.com (111.13.28.10)",
+        "查询内容": "gslb.qianxun.com",
+        "查询耗时": "40.58ms",
+        "结果": {
+          "类型": "NS委派",
+          "记录": [
+            "ns4.jdcache.com",
+            "ns5.jdcache.com",
+            "ns1.jdcache.com",
+            "ns2.jdcache.com",
+            "ns3.jdcache.com"
+          ]
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 gslb.qianxun.com 的 NS 委派记录"
+      },
+      {
+        "步骤": 6,
+        "查询域名": "www.jd.com.gslb.qianxun.com",
+        "父域": "gslb.qianxun.com",
+        "最近已解析父域": "gslb.qianxun.com",
+        "使用的NS服务器": "ns4.jdcache.com (106.39.177.32)",
+        "查询内容": "www.jd.com.gslb.qianxun.com",
+        "查询耗时": "9.48ms",
+        "结果": {
+          "类型": "CNAME",
+          "记录": "www.jd.com.gslb.qianxun.com → www.jd.com.s.galileo.jcloud-cdn.com"
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 CNAME 记录，指向 www.jd.com.s.galileo.jcloud-cdn.com",
+        "失败查询": [
+          {
+            "查询内容": "com.gslb.qianxun.com",
+            "状态": "主机不存在"
+          },
+          {
+            "查询内容": "jd.com.gslb.qianxun.com",
+            "状态": "主机不存在"
+          }
+        ]
+      },
+      {
+        "步骤": 7,
+        "查询域名": "jcloud-cdn.com",
+        "父域": "com",
+        "最近已解析父域": "com",
+        "使用的NS服务器": "l.gtld-servers.net (192.41.162.30)",
+        "查询内容": "jcloud-cdn.com",
+        "查询耗时": "242.61ms",
+        "结果": {
+          "类型": "NS委派",
+          "记录": [
+            "ns7.jdgslb.com",
+            "ns8.jdgslb.com"
+          ]
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 jcloud-cdn.com 的 NS 委派记录"
+      },
+      {
+        "步骤": 8,
+        "查询域名": "www.jd.com.s.galileo.jcloud-cdn.com",
+        "父域": "jcloud-cdn.com",
+        "最近已解析父域": "jcloud-cdn.com",
+        "使用的NS服务器": "ns7.jdgslb.com (114.67.121.112)",
+        "查询内容": "www.jd.com.s.galileo.jcloud-cdn.com",
+        "查询耗时": "24.54ms",
+        "结果": {
+          "类型": "CNAME",
+          "记录": "www.jd.com.s.galileo.jcloud-cdn.com → wwwv6.jcloudimg.com"
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 CNAME 记录，指向 wwwv6.jcloudimg.com",
+        "失败查询": [
+          {
+            "查询内容": "galileo.jcloud-cdn.com",
+            "状态": "主机不存在"
+          },
+          {
+            "查询内容": "s.galileo.jcloud-cdn.com",
+            "状态": "主机不存在"
+          },
+          {
+            "查询内容": "com.s.galileo.jcloud-cdn.com",
+            "状态": "主机不存在"
+          },
+          {
+            "查询内容": "jd.com.s.galileo.jcloud-cdn.com",
+            "状态": "主机不存在"
+          }
+        ]
+      },
+      {
+        "步骤": 9,
+        "查询域名": "jcloudimg.com",
+        "父域": "com",
+        "最近已解析父域": "com",
+        "使用的NS服务器": "l.gtld-servers.net (192.41.162.30)",
+        "查询内容": "jcloudimg.com",
+        "查询耗时": "239.68ms",
+        "结果": {
+          "类型": "NS委派",
+          "记录": [
+            "ns5.jdgslb.com",
+            "ns6.jdgslb.com"
+          ]
+        },
+        "状态": "SUCCESS",
+        "备注": "发现 jcloudimg.com 的 NS 委派记录"
+      },
+      {
+        "步骤": 10,
+        "查询域名": "wwwv6.jcloudimg.com",
+        "父域": "jcloudimg.com",
+        "最近已解析父域": "jcloudimg.com",
+        "使用的NS服务器": "ns5.jdgslb.com (114.67.160.150)",
+        "查询内容": "wwwv6.jcloudimg.com",
+        "查询耗时": "37.65ms",
+        "结果": {
+          "类型": "A记录",
+          "记录": "116.78.120.73"
+        },
+        "状态": "SUCCESS",
+        "备注": "成功解析 A 记录: 116.78.120.73"
+      }
+    ],
+    "解析总结": {
+      "总耗时": "约1502.72ms",
+      "跳转路径": [
+        "www.jd.com → CNAME → www.jd.com.gslb.qianxun.com",
+        "→ CNAME → www.jd.com.s.galileo.jcloud-cdn.com",
+        "→ CNAME → wwwv6.jcloudimg.com → A 116.78.120.73"
+      ],
+      "最终IP": "116.78.120.73",
+      "解析状态": "SUCCESS",
+      "开始时间": "2025-03-06 20:21:05.487",
+      "结束时间": "2025-03-06 20:21:10.986"
+    },
+    "Glue记录": {
+      "a.root-servers.net": ["198.41.0.4"],
+      "l.gtld-servers.net": ["192.41.162.30", "2001:500:d937::30"],
+      "j.gtld-servers.net": ["192.48.79.30", "2001:502:7094::30"],
+      "h.gtld-servers.net": ["192.54.112.30", "2001:502:8cc::30"],
+      "d.gtld-servers.net": ["192.31.80.30", "2001:500:856e::30"],
+      "b.gtld-servers.net": ["192.33.14.30", "2001:503:231d::2:30"],
+      "f.gtld-servers.net": ["192.35.51.30", "2001:503:d414::30"],
+      "k.gtld-servers.net": ["192.52.178.30", "2001:503:d2d::30"],
+      "m.gtld-servers.net": ["192.55.83.30", "2001:501:b1f9::30"],
+      "i.gtld-servers.net": ["192.43.172.30", "2001:503:39c1::30"],
+      "g.gtld-servers.net": ["192.42.93.30", "2001:503:eea3::30"],
+      "a.gtld-servers.net": ["192.5.6.30", "2001:503:a83e::2:30"],
+      "c.gtld-servers.net": ["192.26.92.30", "2001:503:83eb::30"],
+      "e.gtld-servers.net": ["192.12.94.30", "2001:502:1ca1::30"],
+      "ns1.jdcache.com": ["111.13.28.10"],
+      "ns2.jdcache.com": ["111.206.226.10"],
+      "ns3.jdcache.com": ["120.52.149.254"],
+      "ns4.jdcache.com": ["106.39.177.32"],
+      "ns5.jdcache.com": ["120.52.149.254"],
+      "ns7.jdgslb.com": ["114.67.121.112", "114.67.160.152", "116.198.52.98", "153.36.234.86", "183.134.18.122"],
+      "ns8.jdgslb.com": ["114.67.121.113", "114.67.160.153", "116.198.52.99", "153.36.234.87", "183.134.18.123"],
+      "ns5.jdgslb.com": ["114.67.160.150", "116.196.126.20", "116.198.195.4", "153.36.234.84", "183.134.18.120"],
+      "ns6.jdgslb.com": ["114.67.160.151", "116.196.126.21", "116.198.195.5", "153.36.234.85", "183.134.18.121"]
+    },
+    "域名依赖关系": {
+      ".": ["com"],
+      "com": ["jd.com", "qianxun.com", "jcloud-cdn.com", "jcloudimg.com"],
+      "jd.com": ["www.jd.com"],
+      "qianxun.com": ["gslb.qianxun.com"],
+      "gslb.qianxun.com": ["www.jd.com.gslb.qianxun.com"],
+      "jcloud-cdn.com": ["www.jd.com.s.galileo.jcloud-cdn.com"],
+      "jcloudimg.com": ["wwwv6.jcloudimg.com"]
+    }
+  }
+}

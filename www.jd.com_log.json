@@ -1,0 +1,297 @@
+{
+    "www.jd.com": {
+        "解析步骤": [
+            {
+                "步骤": 1,
+                "查询域名": "www.jd.com",
+                "父域": ".",
+                "最近已解析父域": ".",
+                "使用的NS服务器": "a.root-servers.net (198.41.0.4)",
+                "查询内容": "www.jd.com",
+                "查询耗时": "45.61ms",
+                "结果": {
+                    "类型": "NS",
+                    "记录": [
+                        "a.gtld-servers.net",
+                        "b.gtld-servers.net",
+                        "c.gtld-servers.net",
+                        "d.gtld-servers.net",
+                        "e.gtld-servers.net",
+                        "f.gtld-servers.net",
+                        "g.gtld-servers.net",
+                        "h.gtld-servers.net",
+                        "i.gtld-servers.net",
+                        "j.gtld-servers.net",
+                        "k.gtld-servers.net",
+                        "l.gtld-servers.net",
+                        "m.gtld-servers.net"
+                    ]
+                },
+                "状态": "DELEGATION",
+                "备注": "发现com的NS委派记录"
+            },
+            {
+                "步骤": 2,
+                "查询域名": "www.jd.com",
+                "父域": "com",
+                "最近已解析父域": "com",
+                "使用的NS服务器": "a.gtld-servers.net (192.5.6.30)",
+                "查询内容": "www.jd.com",
+                "查询耗时": "159.77ms",
+                "结果": {
+                    "类型": "NS",
+                    "记录": [
+                        "ns1.jdcache.com",
+                        "ns2.jdcache.com",
+                        "ns3.jdcache.com",
+                        "ns4.jdcache.com",
+                        "ns5.jdcache.com"
+                    ]
+                },
+                "状态": "DELEGATION",
+                "备注": "发现jd.com的NS委派记录"
+            },
+            {
+                "步骤": 3,
+                "查询域名": "www.jd.com",
+                "父域": "jd.com",
+                "最近已解析父域": "jd.com",
+                "使用的NS服务器": "ns1.jdcache.com (111.13.28.10)",
+                "查询内容": "com",
+                "查询耗时": "39.32ms",
+                "结果": {
+                    "类型": "CNAME",
+                    "记录": [
+                        "www.jd.com.gslb.qianxun.com"
+                    ]
+                },
+                "状态": "SUCCESS",
+                "备注": "发现CNAME记录: www.jd.com.gslb.qianxun.com"
+            },
+            {
+                "步骤": 4,
+                "查询域名": "www.jd.com.gslb.qianxun.com",
+                "父域": "jd.com",
+                "最近已解析父域": "jd.com",
+                "使用的NS服务器": "a.gtld-servers.net (192.5.6.30)",
+                "查询内容": "www.jd.com.gslb.qianxun.com",
+                "查询耗时": "159.93ms",
+                "结果": {
+                    "类型": "NS",
+                    "记录": [
+                        "ns1.jdcache.com",
+                        "ns2.jdcache.com",
+                        "ns3.jdcache.com",
+                        "ns4.jdcache.com",
+                        "ns5.jdcache.com"
+                    ]
+                },
+                "状态": "DELEGATION",
+                "备注": "发现qianxun.com的NS委派记录"
+            },
+            {
+                "步骤": 5,
+                "查询域名": "www.jd.com.gslb.qianxun.com",
+                "父域": "qianxun.com",
+                "最近已解析父域": "qianxun.com",
+                "使用的NS服务器": "ns1.jdcache.com (111.13.28.10)",
+                "查询内容": "www.jd.com.gslb.qianxun.com",
+                "查询耗时": "29.26ms",
+                "结果": {
+                    "类型": "NS",
+                    "记录": [
+                        "ns3.jdcache.com",
+                        "ns4.jdcache.com",
+                        "ns5.jdcache.com",
+                        "ns1.jdcache.com",
+                        "ns2.jdcache.com"
+                    ]
+                },
+                "状态": "DELEGATION",
+                "备注": "发现gslb.qianxun.com的NS委派记录"
+            },
+            {
+                "步骤": 6,
+                "查询域名": "www.jd.com.gslb.qianxun.com",
+                "父域": "gslb.qianxun.com",
+                "最近已解析父域": "gslb.qianxun.com",
+                "使用的NS服务器": "ns3.jdcache.com (120.52.149.254)",
+                "查询内容": "com",
+                "查询耗时": "10.54ms",
+                "结果": {
+                    "类型": "ERROR"
+                },
+                "状态": "FAILED",
+                "备注": "com.gslb.qianxun.com未获得答案"
+            }
+        ],
+        "解析总结": {
+            "总耗时": "512.00ms",
+            "跳转路径": [
+                "www.jd.com → CNAME → www.jd.com.gslb.qianxun.com"
+            ],
+            "最终IP": "",
+            "解析状态": "FAILED",
+            "开始时间": "2025-04-28 11:00:27.691",
+            "结束时间": "2025-04-28 11:00:28.203",
+            "备注": "com.gslb.qianxun.com未获得答案"
+        },
+        "Glue记录": {
+            "a.root-servers.net": {
+                "A": [
+                    "198.41.0.4"
+                ],
+                "AAAA": []
+            },
+            "a.gtld-servers.net": {
+                "A": [
+                    "192.5.6.30"
+                ],
+                "AAAA": [
+                    "2001:503:a83e::2:30"
+                ]
+            },
+            "b.gtld-servers.net": {
+                "A": [
+                    "192.33.14.30"
+                ],
+                "AAAA": [
+                    "2001:503:231d::2:30"
+                ]
+            },
+            "c.gtld-servers.net": {
+                "A": [
+                    "192.26.92.30"
+                ],
+                "AAAA": [
+                    "2001:503:83eb::30"
+                ]
+            },
+            "d.gtld-servers.net": {
+                "A": [
+                    "192.31.80.30"
+                ],
+                "AAAA": [
+                    "2001:500:856e::30"
+                ]
+            },
+            "e.gtld-servers.net": {
+                "A": [
+                    "192.12.94.30"
+                ],
+                "AAAA": [
+                    "2001:502:1ca1::30"
+                ]
+            },
+            "f.gtld-servers.net": {
+                "A": [
+                    "192.35.51.30"
+                ],
+                "AAAA": [
+                    "2001:503:d414::30"
+                ]
+            },
+            "g.gtld-servers.net": {
+                "A": [
+                    "192.42.93.30"
+                ],
+                "AAAA": [
+                    "2001:503:eea3::30"
+                ]
+            },
+            "h.gtld-servers.net": {
+                "A": [
+                    "192.54.112.30"
+                ],
+                "AAAA": [
+                    "2001:502:8cc::30"
+                ]
+            },
+            "i.gtld-servers.net": {
+                "A": [
+                    "192.43.172.30"
+                ],
+                "AAAA": [
+                    "2001:503:39c1::30"
+                ]
+            },
+            "j.gtld-servers.net": {
+                "A": [
+                    "192.48.79.30"
+                ],
+                "AAAA": [
+                    "2001:502:7094::30"
+                ]
+            },
+            "k.gtld-servers.net": {
+                "A": [
+                    "192.52.178.30"
+                ],
+                "AAAA": [
+                    "2001:503:d2d::30"
+                ]
+            },
+            "l.gtld-servers.net": {
+                "A": [
+                    "192.41.162.30"
+                ],
+                "AAAA": [
+                    "2001:500:d937::30"
+                ]
+            },
+            "m.gtld-servers.net": {
+                "A": [
+                    "192.55.83.30"
+                ],
+                "AAAA": [
+                    "2001:501:b1f9::30"
+                ]
+            },
+            "ns1.jdcache.com": {
+                "A": [
+                    "111.13.28.10"
+                ],
+                "AAAA": []
+            },
+            "ns2.jdcache.com": {
+                "A": [
+                    "111.206.226.10"
+                ],
+                "AAAA": []
+            },
+            "ns3.jdcache.com": {
+                "A": [
+                    "120.52.149.254"
+                ],
+                "AAAA": []
+            },
+            "ns4.jdcache.com": {
+                "A": [
+                    "106.39.177.32"
+                ],
+                "AAAA": []
+            },
+            "ns5.jdcache.com": {
+                "A": [
+                    "120.52.149.254"
+                ],
+                "AAAA": []
+            }
+        },
+        "域名依赖关系": {
+            ".": [
+                "com"
+            ],
+            "com": [
+                "jd.com"
+            ],
+            "jd.com": [
+                "www.jd.com",
+                "qianxun.com"
+            ],
+            "qianxun.com": [
+                "gslb.qianxun.com"
+            ]
+        }
+    }
+}

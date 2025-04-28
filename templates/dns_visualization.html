@@ -189,6 +189,10 @@
                     <th>标签</th>
                 </tr>
                 <tr>
+                    <td bgcolor="#FF8C00"></td>
+                    <td>根域名(.)</td>
+                </tr>
+                <tr>
                     <td bgcolor="lightgreen"></td>
                     <td>权威服务器(NS)</td>
                 </tr>
@@ -327,6 +331,20 @@
             return id;
         }
         
+        // 添加根域名节点
+        function addRootNode() {
+            const id = 'root_.';
+            if (!nodeExists(id)) {
+                nodes.push({
+                    id: id,
+                    label: '.',
+                    group: 'root'
+                });
+                nodeIds.add(id);
+            }
+            return id;
+        }
+        
         // 添加NS服务器节点
         function addNSNode(ns) {
             const id = `ns_${ns}`;
@@ -391,6 +409,9 @@
         // 按照解析步骤顺序处理DNS记录
         // 首先创建所有节点
         const stepMap = new Map(); // 用于存储每个步骤的关键节点
+        
+        // 添加根域名节点
+        const rootNodeId = addRootNode();
         
         // 处理域名依赖关系
         const domainParentMap = new Map();
@@ -526,6 +547,18 @@
             const domainId = `domain_${dep.domain}`;
             const parentId = `domain_${dep.parent_domain}`;
             addEdge(domainId, parentId, 'isSubdomainOf');
+            
+            // 如果父域是顶级域名(如com, org, net等)，将其连接到根域名
+            if (dep.parent_domain.indexOf('.') === -1) {
+                addEdge(parentId, rootNodeId, 'isSubdomainOf');
+            }
+        });
+        
+        // 确保所有顶级域名都连接到根域名
+        nodes.forEach(node => {
+            if (node.group === 'parent_domain' && node.label.indexOf('.') === -1 && !edgeExists(`domain_${node.label}`, rootNodeId)) {
+                addEdge(`domain_${node.label}`, rootNodeId, 'isSubdomainOf');
+            }
         });
         
         // 按步骤顺序添加边
@@ -611,34 +644,21 @@
                 ns_ip: {shape: 'box', color: {background: 'lightblue'}, font: {size: 14}},
                 ip: {shape: 'box', color: {background: 'yellow'}, font: {size: 14}},
                 cname: {shape: 'box', color: {background: 'pink'}, font: {size: 14}},
-                error: {shape: 'box', color: {background: '#FF9999'}, font: {size: 14}}
-            },
-            layout: {
-                hierarchical: {
-                    enabled: true,
-                    direction: 'UD',  // 从上到下的层次结构
-                    sortMethod: 'directed',
-                    levelSeparation: 150,
-                    nodeSpacing: 150
-                }
+                error: {shape: 'box', color: {background: '#FF9999'}, font: {size: 14}},
+                root: {shape: 'dot', color: {background: '#FF8C00'}, size: 20, font: {size: 16, bold: true}}
             },
             physics: {
-                enabled: true,
-                hierarchicalRepulsion: {
-                    centralGravity: 0.0,
-                    springLength: 150,
-                    springConstant: 0.01,
-                    nodeDistance: 120,
+                barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.3,
+                    springLength: 180,
+                    springConstant: 0.05,
                     damping: 0.09
                 },
-                solver: 'hierarchicalRepulsion'
+                solver: 'barnesHut'
             },
             edges: {
-                smooth: {
-                    type: 'cubicBezier',
-                    forceDirection: 'vertical',
-                    roundness: 0.4
-                },
+                smooth: true,
                 arrows: {
                     to: {
                         enabled: true,
@@ -655,10 +675,11 @@
                 }
             },
             interaction: {
-                zoomView: false,
                 navigationButtons: true,
                 keyboard: true,
-                tooltipDelay: 200
+                tooltipDelay: 200,
+                hover: true,
+                zoomView: true
             }
         };
         
@@ -690,7 +711,8 @@
                     'ns': '权威服务器(NS)',
                     'parent_domain': '父域',
                     'cname': 'CNAME记录',
-                    'error': '错误'
+                    'error': '错误',
+                    'root': '根域名(.)'
                 };
                 document.getElementById('node_name').value = clickedNode.label;
                 document.getElementById('group_name').value = groupMap[clickedNode.group] || clickedNode.group;

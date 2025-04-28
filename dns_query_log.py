@@ -145,64 +145,66 @@ class LoggingDNSResolver:
                     self.db.glue_records[ns_name] = {}
                 self.db.glue_records[ns_name]['AAAA'] = aaaa_list
     
-    def domain_dependency_resolution(self, domain, current_parent='.'):
-        """分层解析函数"""
+    def domain_dependency_resolution(self, domain, current_parent='.', is_cname_followup=False):
+        """分层解析函数，支持CNAME递归解析"""
+        # 如果是CNAME跟进，重置父域为根
+        if is_cname_followup:
+            current_parent = '.'
+        
         closest_zone, ns_list = self.find_closest_parent(domain)
         if closest_zone is None:
             closest_zone = '.'
             ns_list = self.db.ns_records.get('.', ['a.root-servers.net'])
         
+        # 获取NS服务器IP
         ns = ns_list[0]
         ns_ip = self.get_ip_for_ns(ns)
         if not ns_ip:
             self.resolution_status = "FAILED"
             self.resolution_notes = f"无法获取NS {ns}的IP"
             self.db.record_step(domain, current_parent, "ERROR", [], "", self.resolution_notes, "FAILED")
-            return
+            return None
         
-        labels = domain.split('.')
-        if closest_zone == '.':
-            query_domain = labels[-1]
-        else:
-            parent_labels = closest_zone.split('.')
-            parent_len = len(parent_labels)
-            if parent_labels[0] == '':
-                parent_len = 0
-            query_domain = '.'.join(labels[-(parent_len + 1):])
+        # 确定查询类型：如果是CNAME跟进或者是顶级查询，先查NS
+        query_type = 'NS' if closest_zone == domain else 'A'
         
-        response, query_time = self.send_dns_query(query_domain, 'A', ns_ip)
+        # 发送查询
+        response, query_time = self.send_dns_query(domain, query_type, ns_ip)
         if response is None:
             self.resolution_status = "FAILED"
             self.resolution_notes = f"{domain}未收到响应"
-            self.db.record_step(domain, current_parent, "ERROR", [], f"{ns} ({ns_ip})", self.resolution_notes, "FAILED", query_time)
-            return
+            self.db.record_step(domain, current_parent, "ERROR", [], f"{ns} ({ns_ip})", 
+                            self.resolution_notes, "FAILED", query_time)
+            return None
         
         self.process_additional_section(response)
         
+        # 处理CNAME记录
         if response.answer:
             for rrset in response.answer:
                 if rrset.rdtype == dns.rdatatype.CNAME:
                     cname_target = rrset[0].target.to_text().rstrip('.')
                     self.db.record_step(
-                        domain, current_parent, "CNAME", cname_target, 
-                        f"{ns} ({ns_ip})", f"发现CNAME记录: {cname_target}", 
+                        domain, current_parent, "CNAME", cname_target,
+                        f"{ns} ({ns_ip})", f"发现CNAME记录: {cname_target}",
                         "SUCCESS", query_time
                     )
                     self.db.cname_records[domain] = cname_target
-                    self.db.parent[domain] = current_parent
-                    self.domain_dependency_resolution(cname_target, current_parent)
-                    return
-                
-                elif rrset.rdtype == dns.rdatatype.A:
+                    # 递归解析CNAME目标
+                    return self.domain_dependency_resolution(cname_target, is_cname_followup=True)
+        
+        # 处理A记录
+        if response.answer:
+            for rrset in response.answer:
+                if rrset.rdtype == dns.rdatatype.A:
                     a_list = [r.address for r in rrset]
                     self.db.record_step(
-                        domain, current_parent, "A", a_list, 
-                        f"{ns} ({ns_ip})", f"成功解析A记录: {', '.join(a_list)}", 
+                        domain, current_parent, "A", a_list,
+                        f"{ns} ({ns_ip})", f"成功解析A记录: {', '.join(a_list)}",
                         "SUCCESS", query_time
                     )
                     self.db.a_records[domain] = a_list
-                    self.db.parent[domain] = current_parent
-                    return
+                    return a_list
         
         # 处理NS委派
         ns_zone = None
@@ -215,40 +217,154 @@ class LoggingDNSResolver:
         
         if ns_zone and ns_records:
             self.db.record_step(
-                domain, current_parent, "NS", ns_records, 
-                f"{ns} ({ns_ip})", f"发现{ns_zone}的NS委派记录", 
+                ns_zone, current_parent, "NS", ns_records,
+                f"{ns} ({ns_ip})", f"发现{ns_zone}的NS委派记录",
                 "DELEGATION", query_time
             )
             self.db.ns_records[ns_zone] = ns_records
             self.db.parent[ns_zone] = current_parent
-            self.domain_dependency_resolution(domain, current_parent=ns_zone)
-        else:
-            self.resolution_status = "FAILED"
-            self.resolution_notes = f"{query_domain}未获得答案"
-            failed_attempts = []
-            if query_domain != domain:
-                remaining_labels = domain.split('.')
-                current_query = query_domain
-                while current_query != domain:
-                    next_label_index = len(domain.split('.')) - len(current_query.split('.')) - 1
-                    if next_label_index < 0:
-                        break
-                    next_query = '.'.join(remaining_labels[next_label_index:])
-                    next_response, next_query_time = self.send_dns_query(next_query, 'A', ns_ip)
-                    if next_response is None:
-                        failed_attempts.append({
-                            "query": next_query,
-                            "error": "无响应"
-                        })
-                        break
-                    self.process_additional_section(next_response)
-                    current_query = next_query
+            return self.domain_dependency_resolution(domain, current_parent=ns_zone)
+        
+        # 如果没有得到任何有效记录
+        self.resolution_status = "FAILED"
+        self.resolution_notes = f"{domain}未获得答案"
+        self.db.record_step(
+            domain, current_parent, "ERROR", [],
+            f"{ns} ({ns_ip})", self.resolution_notes,
+            "FAILED", query_time
+        )
+        return None
+    
+    # def domain_dependency_resolution(self, domain, current_parent='.'):
+    #     """分层解析函数"""
+    #     closest_zone, ns_list = self.find_closest_parent(domain)
+    #     if closest_zone is None:
+    #         closest_zone = '.'
+    #         ns_list = self.db.ns_records.get('.', ['a.root-servers.net'])
+        
+    #     ns = ns_list[0]
+    #     ns_ip = self.get_ip_for_ns(ns)
+    #     if not ns_ip:
+    #         self.resolution_status = "FAILED"
+    #         self.resolution_notes = f"无法获取NS {ns}的IP"
+    #         self.db.record_step(closest_zone, current_parent, "ERROR", [], "", self.resolution_notes, "FAILED")
+    #         return
+        
+    #     # 确定实际查询的域名
+    #     if closest_zone == '.':
+    #         query_domain = 'com.'  # 根查询总是查询TLD
+    #     else:
+    #         query_domain = closest_zone
+        
+    #     response, query_time = self.send_dns_query(query_domain, 'NS', ns_ip)
+        
+    #     labels = domain.split('.')
+    #     if closest_zone == '.':
+    #         query_domain = labels[-1]
+    #     else:
+    #         parent_labels = closest_zone.split('.')
+    #         parent_len = len(parent_labels)
+    #         if parent_labels[0] == '':
+    #             parent_len = 0
+    #         query_domain = '.'.join(labels[-(parent_len + 1):])
+        
+    #     response, query_time = self.send_dns_query(query_domain, 'A', ns_ip)
+    #     if response is None:
+    #         self.resolution_status = "FAILED"
+    #         self.resolution_notes = f"{domain}未收到响应"
+    #         self.db.record_step(domain, current_parent, "ERROR", [], f"{ns} ({ns_ip})", self.resolution_notes, "FAILED", query_time)
+    #         return
+        
+    #     self.process_additional_section(response)
+        
+    #     if response.answer:
+    #         for rrset in response.answer:
+    #             if rrset.rdtype == dns.rdatatype.CNAME:
+    #                 cname_target = rrset[0].target.to_text().rstrip('.')
+    #                 # 处理CNAME记录时
+    #                 self.db.record_step(
+    #                     domain,  # 实际查询的域名
+    #                     current_parent,
+    #                     "CNAME", 
+    #                     cname_target,
+    #                     f"{ns} ({ns_ip})",
+    #                     f"发现CNAME记录: {cname_target}",
+    #                     "SUCCESS",
+    #                     query_time
+    #                 )
+    #                 self.db.cname_records[domain] = cname_target
+    #                 self.db.parent[domain] = current_parent
+    #                 self.domain_dependency_resolution(cname_target, current_parent)
+    #                 return
+                
+    #             elif rrset.rdtype == dns.rdatatype.A:
+    #                 a_list = [r.address for r in rrset]
+    #                 # 处理A记录时
+    #                 self.db.record_step(
+    #                     domain,  # 实际查询的域名
+    #                     current_parent,
+    #                     "A",
+    #                     a_list,
+    #                     f"{ns} ({ns_ip})",
+    #                     f"成功解析A记录: {', '.join(a_list)}",
+    #                     "SUCCESS",
+    #                     query_time
+    #                 )       
+    #                 self.db.a_records[domain] = a_list
+    #                 self.db.parent[domain] = current_parent
+    #                 return
+        
+    #     # 处理NS委派
+    #     ns_zone = None
+    #     ns_records = []
+    #     for rrset in response.authority:
+    #         if rrset.rdtype == dns.rdatatype.NS:
+    #             ns_zone = rrset.name.to_text().rstrip('.')
+    #             ns_records = [r.target.to_text().rstrip('.') for r in rrset]
+    #             break
+        
+    #     if ns_zone and ns_records:
+    #         # 在处理NS记录时
+    #         self.db.record_step(
+    #             ns_zone,  # 记录实际查询的域
+    #             current_parent, 
+    #             "NS", 
+    #             ns_records,
+    #             f"{ns} ({ns_ip})", 
+    #             f"发现{ns_zone}的NS委派记录", 
+    #             "DELEGATION", 
+    #             query_time
+    #         )
+    #         self.db.ns_records[ns_zone] = ns_records
+    #         self.db.parent[ns_zone] = current_parent
+    #         self.domain_dependency_resolution(domain, current_parent=ns_zone)
+    #     else:
+    #         self.resolution_status = "FAILED"
+    #         self.resolution_notes = f"{query_domain}未获得答案"
+    #         failed_attempts = []
+    #         if query_domain != domain:
+    #             remaining_labels = domain.split('.')
+    #             current_query = query_domain
+    #             while current_query != domain:
+    #                 next_label_index = len(domain.split('.')) - len(current_query.split('.')) - 1
+    #                 if next_label_index < 0:
+    #                     break
+    #                 next_query = '.'.join(remaining_labels[next_label_index:])
+    #                 next_response, next_query_time = self.send_dns_query(next_query, 'A', ns_ip)
+    #                 if next_response is None:
+    #                     failed_attempts.append({
+    #                         "query": next_query,
+    #                         "error": "无响应"
+    #                     })
+    #                     break
+    #                 self.process_additional_section(next_response)
+    #                 current_query = next_query
             
-            self.db.record_step(
-                domain, current_parent, "ERROR", [], 
-                f"{ns} ({ns_ip})", self.resolution_notes, 
-                "FAILED", query_time, failed_attempts
-            )
+    #         self.db.record_step(
+    #             domain, current_parent, "ERROR", [], 
+    #             f"{ns} ({ns_ip})", self.resolution_notes, 
+    #             "FAILED", query_time, failed_attempts
+    #         )
     
     def _calculate_total_time(self):
         """计算总耗时"""
@@ -258,15 +374,20 @@ class LoggingDNSResolver:
         return f"{(end - start).total_seconds() * 1000:.2f}ms"
     
     def _build_resolution_path(self):
-        """构建解析路径"""
+        """构建解析路径，正确处理CNAME链"""
         path = []
         current = self.original_domain
-        while current in self.db.cname_records:
+        visited = set()
+        
+        while current in self.db.cname_records and current not in visited:
+            visited.add(current)
             target = self.db.cname_records[current]
             path.append(f"{current} → CNAME → {target}")
             current = target
+        
         if current in self.db.a_records:
             path.append(f"{current} → A → {self.db.a_records[current][0]}")
+        
         return path
     
     def _format_glue_records(self):
@@ -312,11 +433,10 @@ class LoggingDNSResolver:
         for step in self.db.dns_records_list:
             formatted_step = {
                 "步骤": step["step_number"],
-                "查询域名": step["query_domain"],
+                "查询内容": step["query_domain"],  # 现在只保留这一个字段
                 "父域": step["parent_domain"],
                 "最近已解析父域": self._get_recent_parent(step),
                 "使用的NS服务器": step["server_used"],
-                "查询内容": self._get_query_content(step),
                 "查询耗时": f"{step['query_time']:.2f}ms",
                 "结果": self._format_step_result(step),
                 "状态": step["status"],
@@ -325,18 +445,24 @@ class LoggingDNSResolver:
             if "failed_attempts" in step:
                 formatted_step["失败查询"] = step["failed_attempts"]
             result[original_domain]["解析步骤"].append(formatted_step)
-        
+    
         self.logger.info(json.dumps(result, ensure_ascii=False, indent=4))
     
     def _get_recent_parent(self, step):
         """获取最近已解析父域"""
         return step["parent_domain"] if step["parent_domain"] != "null" else "."
     
-    def _get_query_content(self, step):
-        """获取查询内容"""
-        if step["record_type"] in ["NS", "A"]:
-            return step["query_domain"]
-        return step["query_domain"].split('.')[-1]
+    # def _get_query_content(self, step):
+    #     """获取查询内容"""
+    #     if step["record_type"] == "CNAME":
+    #         return step["query_domain"]
+    #     elif step["record_type"] == "NS":
+    #         # 对于NS查询，显示正在查询的完整域名
+    #         return step["query_domain"]
+    #     elif step["record_type"] == "A":
+    #         # 对于A记录查询，显示完整的查询域名
+    #         return step["query_domain"]
+    #     return step["query_domain"]
     
     def _format_step_result(self, step):
         """格式化步骤结果"""

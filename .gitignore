@@ -7,6 +7,7 @@ bin-release/
 # 显式添加小写bin目录
 bin/
 lib/
+log/
 
 # Other files and folders
 .settings/

@@ -1,14 +1,13 @@
 {
-    "www.jd.com": {
+    "oa.sugon.com": {
         "解析步骤": [
             {
                 "步骤": 1,
-                "查询域名": "www.jd.com",
+                "查询内容": "com",
                 "父域": ".",
                 "最近已解析父域": ".",
                 "使用的NS服务器": "a.root-servers.net (198.41.0.4)",
-                "查询内容": "www.jd.com",
-                "查询耗时": "45.61ms",
+                "查询耗时": "51.57ms",
                 "结果": {
                     "类型": "NS",
                     "记录": [
@@ -32,109 +31,65 @@
             },
             {
                 "步骤": 2,
-                "查询域名": "www.jd.com",
+                "查询内容": "sugon.com",
                 "父域": "com",
                 "最近已解析父域": "com",
                 "使用的NS服务器": "a.gtld-servers.net (192.5.6.30)",
-                "查询内容": "www.jd.com",
-                "查询耗时": "159.77ms",
+                "查询耗时": "159.15ms",
                 "结果": {
                     "类型": "NS",
                     "记录": [
-                        "ns1.jdcache.com",
-                        "ns2.jdcache.com",
-                        "ns3.jdcache.com",
-                        "ns4.jdcache.com",
-                        "ns5.jdcache.com"
+                        "vip3.alidns.com",
+                        "vip4.alidns.com"
                     ]
                 },
                 "状态": "DELEGATION",
-                "备注": "发现jd.com的NS委派记录"
+                "备注": "发现sugon.com的NS委派记录"
             },
             {
                 "步骤": 3,
-                "查询域名": "www.jd.com",
-                "父域": "jd.com",
-                "最近已解析父域": "jd.com",
-                "使用的NS服务器": "ns1.jdcache.com (111.13.28.10)",
-                "查询内容": "com",
-                "查询耗时": "39.32ms",
+                "查询内容": "oa.sugon.com",
+                "父域": "sugon.com",
+                "最近已解析父域": "sugon.com",
+                "使用的NS服务器": "vip3.alidns.com (121.40.6.163)",
+                "查询耗时": "26.70ms",
                 "结果": {
                     "类型": "CNAME",
                     "记录": [
-                        "www.jd.com.gslb.qianxun.com"
+                        "gtm-cn-uqm35nh8u01.sugon.com"
                     ]
                 },
                 "状态": "SUCCESS",
-                "备注": "发现CNAME记录: www.jd.com.gslb.qianxun.com"
+                "备注": "发现CNAME记录: gtm-cn-uqm35nh8u01.sugon.com"
             },
             {
                 "步骤": 4,
-                "查询域名": "www.jd.com.gslb.qianxun.com",
-                "父域": "jd.com",
-                "最近已解析父域": "jd.com",
-                "使用的NS服务器": "a.gtld-servers.net (192.5.6.30)",
-                "查询内容": "www.jd.com.gslb.qianxun.com",
-                "查询耗时": "159.93ms",
+                "查询内容": "gtm-cn-uqm35nh8u01.sugon.com",
+                "父域": ".",
+                "最近已解析父域": ".",
+                "使用的NS服务器": "vip3.alidns.com (121.40.6.163)",
+                "查询耗时": "26.59ms",
                 "结果": {
-                    "类型": "NS",
+                    "类型": "A",
                     "记录": [
-                        "ns1.jdcache.com",
-                        "ns2.jdcache.com",
-                        "ns3.jdcache.com",
-                        "ns4.jdcache.com",
-                        "ns5.jdcache.com"
+                        "60.29.3.198"
                     ]
                 },
-                "状态": "DELEGATION",
-                "备注": "发现qianxun.com的NS委派记录"
-            },
-            {
-                "步骤": 5,
-                "查询域名": "www.jd.com.gslb.qianxun.com",
-                "父域": "qianxun.com",
-                "最近已解析父域": "qianxun.com",
-                "使用的NS服务器": "ns1.jdcache.com (111.13.28.10)",
-                "查询内容": "www.jd.com.gslb.qianxun.com",
-                "查询耗时": "29.26ms",
-                "结果": {
-                    "类型": "NS",
-                    "记录": [
-                        "ns3.jdcache.com",
-                        "ns4.jdcache.com",
-                        "ns5.jdcache.com",
-                        "ns1.jdcache.com",
-                        "ns2.jdcache.com"
-                    ]
-                },
-                "状态": "DELEGATION",
-                "备注": "发现gslb.qianxun.com的NS委派记录"
-            },
-            {
-                "步骤": 6,
-                "查询域名": "www.jd.com.gslb.qianxun.com",
-                "父域": "gslb.qianxun.com",
-                "最近已解析父域": "gslb.qianxun.com",
-                "使用的NS服务器": "ns3.jdcache.com (120.52.149.254)",
-                "查询内容": "com",
-                "查询耗时": "10.54ms",
-                "结果": {
-                    "类型": "ERROR"
-                },
-                "状态": "FAILED",
-                "备注": "com.gslb.qianxun.com未获得答案"
+                "状态": "SUCCESS",
+                "备注": "成功解析A记录: 60.29.3.198"
             }
         ],
         "解析总结": {
-            "总耗时": "512.00ms",
+            "总耗时": "278.00ms",
             "跳转路径": [
-                "www.jd.com → CNAME → www.jd.com.gslb.qianxun.com"
+                "oa.sugon.com → CNAME → gtm-cn-uqm35nh8u01.sugon.com",
+                "gtm-cn-uqm35nh8u01.sugon.com → A → 60.29.3.198"
             ],
-            "最终IP": "",
-            "解析状态": "FAILED",
-            "开始时间": "2025-04-28 11:00:27.691",
-            "结束时间": "2025-04-28 11:00:28.203",
-            "备注": "com.gslb.qianxun.com未获得答案"
+            "最终IP": "60.29.3.198",
+            "解析状态": "SUCCESS",
+            "开始时间": "2025-04-29 09:35:35.839",
+            "结束时间": "2025-04-29 09:35:36.117",
+            "备注": ""
         },
         "Glue记录": {
             "a.root-servers.net": {
@@ -247,35 +202,39 @@
                     "2001:501:b1f9::30"
                 ]
             },
-            "ns1.jdcache.com": {
+            "vip3.alidns.com": {
                 "A": [
-                    "111.13.28.10"
+                    "121.40.6.163",
+                    "140.205.1.5",
+                    "170.33.32.210",
+                    "170.33.40.136",
+                    "170.33.73.26",
+                    "170.33.80.10",
+                    "39.103.26.212",
+                    "47.116.84.178",
+                    "8.129.152.245",
+                    "8.212.93.3"
                 ],
-                "AAAA": []
+                "AAAA": [
+                    "2408:4009:500::3"
+                ]
             },
-            "ns2.jdcache.com": {
+            "vip4.alidns.com": {
                 "A": [
-                    "111.206.226.10"
+                    "121.40.6.164",
+                    "140.205.1.6",
+                    "170.33.32.211",
+                    "170.33.40.137",
+                    "170.33.73.27",
+                    "170.33.80.11",
+                    "39.103.26.213",
+                    "47.116.84.179",
+                    "8.129.152.246",
+                    "8.212.93.4"
                 ],
-                "AAAA": []
-            },
-            "ns3.jdcache.com": {
-                "A": [
-                    "120.52.149.254"
-                ],
-                "AAAA": []
-            },
-            "ns4.jdcache.com": {
-                "A": [
-                    "106.39.177.32"
-                ],
-                "AAAA": []
-            },
-            "ns5.jdcache.com": {
-                "A": [
-                    "120.52.149.254"
-                ],
-                "AAAA": []
+                "AAAA": [
+                    "2408:4009:500::4"
+                ]
             }
         },
         "域名依赖关系": {
@@ -283,14 +242,7 @@
                 "com"
             ],
             "com": [
-                "jd.com"
-            ],
-            "jd.com": [
-                "www.jd.com",
-                "qianxun.com"
-            ],
-            "qianxun.com": [
-                "gslb.qianxun.com"
+                "sugon.com"
             ]
         }
     }

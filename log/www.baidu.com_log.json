@@ -1,0 +1,344 @@
+{
+    "www.baidu.com": {
+        "解析步骤": [
+            {
+                "步骤": 1,
+                "查询内容": "com",
+                "父域": ".",
+                "最近已解析父域": ".",
+                "使用的NS服务器": "a.root-servers.net (198.41.0.4)",
+                "查询耗时": "43.89ms",
+                "结果": {
+                    "类型": "NS",
+                    "记录": [
+                        "a.gtld-servers.net",
+                        "b.gtld-servers.net",
+                        "c.gtld-servers.net",
+                        "d.gtld-servers.net",
+                        "e.gtld-servers.net",
+                        "f.gtld-servers.net",
+                        "g.gtld-servers.net",
+                        "h.gtld-servers.net",
+                        "i.gtld-servers.net",
+                        "j.gtld-servers.net",
+                        "k.gtld-servers.net",
+                        "l.gtld-servers.net",
+                        "m.gtld-servers.net"
+                    ]
+                },
+                "状态": "DELEGATION",
+                "备注": "发现com的NS委派记录"
+            },
+            {
+                "步骤": 2,
+                "查询内容": "baidu.com",
+                "父域": "com",
+                "最近已解析父域": "com",
+                "使用的NS服务器": "a.gtld-servers.net (192.5.6.30)",
+                "查询耗时": "159.83ms",
+                "结果": {
+                    "类型": "NS",
+                    "记录": [
+                        "ns2.baidu.com",
+                        "ns3.baidu.com",
+                        "ns4.baidu.com",
+                        "ns1.baidu.com",
+                        "ns7.baidu.com"
+                    ]
+                },
+                "状态": "DELEGATION",
+                "备注": "发现baidu.com的NS委派记录"
+            },
+            {
+                "步骤": 3,
+                "查询内容": "www.baidu.com",
+                "父域": "baidu.com",
+                "最近已解析父域": "baidu.com",
+                "使用的NS服务器": "ns2.baidu.com (220.181.33.31)",
+                "查询耗时": "9.49ms",
+                "结果": {
+                    "类型": "CNAME",
+                    "记录": [
+                        "www.a.shifen.com"
+                    ]
+                },
+                "状态": "SUCCESS",
+                "备注": "发现CNAME记录: www.a.shifen.com"
+            },
+            {
+                "步骤": 4,
+                "查询内容": "shifen.com",
+                "父域": ".",
+                "最近已解析父域": ".",
+                "使用的NS服务器": "a.gtld-servers.net (192.5.6.30)",
+                "查询耗时": "163.08ms",
+                "结果": {
+                    "类型": "NS",
+                    "记录": [
+                        "dns.baidu.com",
+                        "ns2.baidu.com",
+                        "ns3.baidu.com",
+                        "ns4.baidu.com"
+                    ]
+                },
+                "状态": "DELEGATION",
+                "备注": "发现shifen.com的NS委派记录"
+            },
+            {
+                "步骤": 5,
+                "查询内容": "a.shifen.com",
+                "父域": "shifen.com",
+                "最近已解析父域": "shifen.com",
+                "使用的NS服务器": "dns.baidu.com (110.242.68.134)",
+                "查询耗时": "22.27ms",
+                "结果": {
+                    "类型": "NS",
+                    "记录": [
+                        "ns1.a.shifen.com",
+                        "ns5.a.shifen.com",
+                        "ns2.a.shifen.com",
+                        "ns3.a.shifen.com",
+                        "ns4.a.shifen.com"
+                    ]
+                },
+                "状态": "DELEGATION",
+                "备注": "发现a.shifen.com的NS委派记录"
+            },
+            {
+                "步骤": 6,
+                "查询内容": "www.a.shifen.com",
+                "父域": "a.shifen.com",
+                "最近已解析父域": "a.shifen.com",
+                "使用的NS服务器": "ns1.a.shifen.com (110.242.68.42)",
+                "查询耗时": "15.42ms",
+                "结果": {
+                    "类型": "A",
+                    "记录": [
+                        "110.242.69.21",
+                        "110.242.70.57"
+                    ]
+                },
+                "状态": "SUCCESS",
+                "备注": "成功解析A记录: 110.242.69.21, 110.242.70.57"
+            }
+        ],
+        "解析总结": {
+            "总耗时": "425.00ms",
+            "跳转路径": [
+                "www.baidu.com → CNAME → www.a.shifen.com",
+                "www.a.shifen.com → A → 110.242.69.21"
+            ],
+            "最终IP": "110.242.69.21",
+            "解析状态": "SUCCESS",
+            "开始时间": "2025-04-29 09:50:43.430",
+            "结束时间": "2025-04-29 09:50:43.855",
+            "备注": ""
+        },
+        "Glue记录": {
+            "a.root-servers.net": {
+                "A": [
+                    "198.41.0.4"
+                ],
+                "AAAA": []
+            },
+            "a.gtld-servers.net": {
+                "A": [
+                    "192.5.6.30"
+                ],
+                "AAAA": [
+                    "2001:503:a83e::2:30"
+                ]
+            },
+            "b.gtld-servers.net": {
+                "A": [
+                    "192.33.14.30"
+                ],
+                "AAAA": [
+                    "2001:503:231d::2:30"
+                ]
+            },
+            "c.gtld-servers.net": {
+                "A": [
+                    "192.26.92.30"
+                ],
+                "AAAA": [
+                    "2001:503:83eb::30"
+                ]
+            },
+            "d.gtld-servers.net": {
+                "A": [
+                    "192.31.80.30"
+                ],
+                "AAAA": [
+                    "2001:500:856e::30"
+                ]
+            },
+            "e.gtld-servers.net": {
+                "A": [
+                    "192.12.94.30"
+                ],
+                "AAAA": [
+                    "2001:502:1ca1::30"
+                ]
+            },
+            "f.gtld-servers.net": {
+                "A": [
+                    "192.35.51.30"
+                ],
+                "AAAA": [
+                    "2001:503:d414::30"
+                ]
+            },
+            "g.gtld-servers.net": {
+                "A": [
+                    "192.42.93.30"
+                ],
+                "AAAA": [
+                    "2001:503:eea3::30"
+                ]
+            },
+            "h.gtld-servers.net": {
+                "A": [
+                    "192.54.112.30"
+                ],
+                "AAAA": [
+                    "2001:502:8cc::30"
+                ]
+            },
+            "i.gtld-servers.net": {
+                "A": [
+                    "192.43.172.30"
+                ],
+                "AAAA": [
+                    "2001:503:39c1::30"
+                ]
+            },
+            "j.gtld-servers.net": {
+                "A": [
+                    "192.48.79.30"
+                ],
+                "AAAA": [
+                    "2001:502:7094::30"
+                ]
+            },
+            "k.gtld-servers.net": {
+                "A": [
+                    "192.52.178.30"
+                ],
+                "AAAA": [
+                    "2001:503:d2d::30"
+                ]
+            },
+            "l.gtld-servers.net": {
+                "A": [
+                    "192.41.162.30"
+                ],
+                "AAAA": [
+                    "2001:500:d937::30"
+                ]
+            },
+            "m.gtld-servers.net": {
+                "A": [
+                    "192.55.83.30"
+                ],
+                "AAAA": [
+                    "2001:501:b1f9::30"
+                ]
+            },
+            "ns2.baidu.com": {
+                "A": [
+                    "220.181.33.31"
+                ],
+                "AAAA": [
+                    "240e:940:603:4:0:ff:b01b:589a"
+                ]
+            },
+            "ns3.baidu.com": {
+                "A": [
+                    "153.3.238.93",
+                    "36.155.132.78"
+                ],
+                "AAAA": []
+            },
+            "ns4.baidu.com": {
+                "A": [
+                    "111.45.3.226",
+                    "14.215.178.80"
+                ],
+                "AAAA": []
+            },
+            "ns1.baidu.com": {
+                "A": [
+                    "110.242.68.134"
+                ],
+                "AAAA": [
+                    "240e:bf:b801:1002:0:ff:b024:26de"
+                ]
+            },
+            "ns7.baidu.com": {
+                "A": [
+                    "180.76.76.92"
+                ],
+                "AAAA": [
+                    "240e:940:603:4:0:ff:b01b:589a",
+                    "240e:bf:b801:1002:0:ff:b024:26de"
+                ]
+            },
+            "dns.baidu.com": {
+                "A": [
+                    "110.242.68.134"
+                ],
+                "AAAA": [
+                    "240e:bf:b801:1002:0:ff:b024:26de"
+                ]
+            },
+            "ns5.a.shifen.com": {
+                "A": [
+                    "180.76.76.95"
+                ],
+                "AAAA": [
+                    "240e:bf:b801:1006:0:ff:b04f:346b",
+                    "240e:940:603:a:0:ff:b08d:239d"
+                ]
+            },
+            "ns4.a.shifen.com": {
+                "A": [
+                    "14.215.177.229",
+                    "111.20.4.28"
+                ],
+                "AAAA": []
+            },
+            "ns3.a.shifen.com": {
+                "A": [
+                    "36.155.132.12",
+                    "153.3.238.162"
+                ],
+                "AAAA": []
+            },
+            "ns2.a.shifen.com": {
+                "A": [
+                    "220.181.33.32"
+                ],
+                "AAAA": []
+            },
+            "ns1.a.shifen.com": {
+                "A": [
+                    "110.242.68.42"
+                ],
+                "AAAA": []
+            }
+        },
+        "域名依赖关系": {
+            ".": [
+                "com",
+                "shifen.com"
+            ],
+            "com": [
+                "baidu.com"
+            ],
+            "shifen.com": [
+                "a.shifen.com"
+            ]
+        }
+    }
+}

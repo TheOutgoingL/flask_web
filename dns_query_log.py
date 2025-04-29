@@ -62,22 +62,30 @@ class DNSDatabase:
 
 def setup_logger(domain_name):
     """设置日志记录器"""
-    log_dir = os.path.dirname(os.path.abspath(__file__))
+    # 获取当前脚本所在目录
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # 创建log目录
+    log_dir = os.path.join(script_dir, "log")
     os.makedirs(log_dir, exist_ok=True)
+    # 设置日志文件路径
     log_file = os.path.join(log_dir, f"{domain_name}_log.json")
     
+    # 创建logger实例
     logger = logging.getLogger("dns_query")
     logger.setLevel(logging.INFO)
     
-    if logger.handlers:
-        logger.handlers.clear()
+    # 清除已有的handler，确保每次都是新的
+    logger.handlers.clear()
     
-    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    # 使用FileHandler并设置模式为'w'（重写）而不是默认的'a'（追加）
+    file_handler = logging.FileHandler(log_file, mode='w', encoding='utf-8')
     file_handler.setLevel(logging.INFO)
     
+    # 设置格式化器
     formatter = logging.Formatter('%(message)s')
     file_handler.setFormatter(formatter)
     
+    # 添加handler到logger
     logger.addHandler(file_handler)
     return logger
 

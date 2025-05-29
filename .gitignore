@@ -4,10 +4,13 @@ bin-release/
 [Oo]bj/
 [Bb]in/
 
+
+
 # 显式添加小写bin目录
 bin/
 lib/
 log/
+__pycache__/
 
 # Other files and folders
 .settings/

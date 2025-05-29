@@ -5,6 +5,7 @@ import requests
 import dns.resolver
 from flask_sqlalchemy import SQLAlchemy
 import json
+import os
 from urllib.parse import quote_plus
 
 app = Flask(__name__)
@@ -37,6 +38,40 @@ def index_split():
 @app.route('/dns_visualization/')
 def dns_visualization():
     return render_template("dns_visualization.html")
+
+@app.route('/dns_query')
+def dns_query():
+    domain = request.args.get('domain', '')
+    return render_template("dns_query_visualization.html", domain=domain)
+
+@app.route('/dns_query_data')
+def dns_query_data():
+    domain = request.args.get('domain')
+    if not domain:
+        return jsonify({"error": "请提供域名参数"}), 400
+    
+    # 设置日志记录器
+    import dns_query_log
+    logger = dns_query_log.setup_logger(domain)
+    
+    # 创建DNS解析器并执行解析
+    resolver = dns_query_log.LoggingDNSResolver(logger)
+    resolver.db.ns_records['.'] = ['a.root-servers.net']
+    
+    # 执行DNS解析
+    resolver.domain_dependency_resolution(domain)
+    resolver.output_result(domain)
+    
+    # 读取生成的日志文件
+    log_dir = os.path.dirname(os.path.abspath(__file__))
+    log_file = os.path.join(log_dir, f"{domain}_log.json")
+    
+    try:
+        with open(log_file, 'r', encoding='utf-8') as f:
+            dns_data = json.load(f)
+        return jsonify(dns_data)
+    except Exception as e:
+        return jsonify({"error": f"解析域名失败: {str(e)}"}), 500
 
 # 新增API端点，只返回网络可视化图的内容
 @app.route('/network_only', methods=['GET'])
@@ -179,34 +214,67 @@ def get_all_ips(domain):
         print(f"无法找到域名 {domain} 的IP地址")
         return []
 
+# def get_ip_info(ip):
+#     try:
+#         # 调用淘宝IP API
+#         response = requests.get(f"https://ip.taobao.com/outGetIpInfo?accessKey=alibaba-inc&ip={ip}")
+#         if response.status_code == 200:
+#             data = response.json()
+#             if data.get("code") == 0:  # 检查返回的code是否为0表示成功
+#                 ip_data = data.get("data", {})
+
+#                 # 将空字符串替换为"未知"
+#                 def replace_unknown(value):
+#                     return "未知" if value == "" or value is None else value
+
+#                 return {
+#                     "ip": ip,
+#                     "country": replace_unknown(ip_data.get("country", "未知")),
+#                     "isp": replace_unknown(ip_data.get("isp", "未知"))
+#                 }
+#             else:
+#                 print(f"未能成功获取IP信息: {data}")
+#                 return {"ip": ip, "country": "未知", "isp": "未知"}
+#         else:
+#             print(f"获取IP信息失败，状态码: {response.status_code}")
+#             return {"ip": ip, "country": "未知", "isp": "未知"}
+#     except requests.RequestException as e:
+#         print(f"请求过程中出现错误: {e}")
+#         return {"ip": ip, "country": "未知", "isp": "未知"}
+# # print(clean_data(get_domainInfo(domain)))
 def get_ip_info(ip):
+    """获取IP的详细信息（国家、ISP等）"""
     try:
-        # 调用淘宝IP API
-        response = requests.get(f"https://ip.taobao.com/outGetIpInfo?accessKey=alibaba-inc&ip={ip}")
+        # 调用 ipplus360 API
+        api_key = "fQf9F6JO0hW4wGA9SanmZ3Dh7OR6SFf2YUdDWPiZDY5pGkVtIMw9HNuFvMWquwyn"
+        response = requests.get(f"https://api.ipplus360.com/ip/geo/v1/city/?key={api_key}&ip={ip}&coordsys=WGS84")
         if response.status_code == 200:
             data = response.json()
-            if data.get("code") == 0:  # 检查返回的code是否为0表示成功
-                ip_data = data.get("data", {})
-
+            if data.get("code") == "Success":
+                ip_data = data.get("data", {})               
+                # 获取ISP信息
+                isp = ip_data.get("isp", "")
+                # print(f"ISP: {isp}")
+                # 如果ISP是空的，则不输出
+                if not isp or isp == "":
+                    return None
                 # 将空字符串替换为"未知"
                 def replace_unknown(value):
                     return "未知" if value == "" or value is None else value
-
                 return {
                     "ip": ip,
                     "country": replace_unknown(ip_data.get("country", "未知")),
-                    "isp": replace_unknown(ip_data.get("isp", "未知"))
+                    "isp": isp
                 }
             else:
-                print(f"未能成功获取IP信息: {data}")
-                return {"ip": ip, "country": "未知", "isp": "未知"}
+                print(f"未能成功获取IP: {ip}的信息: {data.get('msg', '未知错误')}")
+                return None
         else:
-            print(f"获取IP信息失败，状态码: {response.status_code}")
-            return {"ip": ip, "country": "未知", "isp": "未知"}
-    except requests.RequestException as e:
+            print(f"获取IP: {ip}信息失败，状态码: {response.status_code}")
+            return None
+    except Exception as e:
         print(f"请求过程中出现错误: {e}")
-        return {"ip": ip, "country": "未知", "isp": "未知"}
-# print(clean_data(get_domainInfo(domain)))
+        return None
 
 def get_ips_info(domain):
     ips = get_all_ips(domain)

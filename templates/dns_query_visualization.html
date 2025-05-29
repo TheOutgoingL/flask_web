@@ -119,33 +119,14 @@
             10px -5px 5px lightgray,
             -10px -5px 5px lightgray;
         }
-
-        #fileInput {
-            display: none;
-        }
-
-        .file-upload {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-
-        .file-upload:hover {
-            background-color: #45a049;
-        }
     </style>
 </head>
 <body>
 <div id="loading-bar"></div>
 <div>
     <div class="query-section">
-        <label for="fileInput" class="file-upload">选择JSON文件</label>
-        <input type="file" id="fileInput" accept=".json">
-        <button onclick="processJsonFile()">可视化DNS解析</button>
+        <input type="text" id="domain" placeholder="输入域名" value="{{ domain }}">
+        <button onclick="queryDomain()">查询</button>
         <h3>双击节点<br>查看信息</h3>
         <div class="node-info">
             <div style="margin-bottom: 2px">
@@ -177,6 +158,10 @@
                 <tr>
                     <td>解析步骤数</td>
                     <td id="total-steps"></td>
+                </tr>
+                <tr>
+                    <td>总耗时</td>
+                    <td id="total-time"></td>
                 </tr>
             </table>
             <div id="records"></div>
@@ -227,141 +212,64 @@
 </div>
 
 <script>
-    // 全局变量存储解析后的数据
-    let dnsData = null;
+    // 页面加载完成后，如果URL中有域名参数，则自动查询
+    document.addEventListener('DOMContentLoaded', function() {
+        const domain = document.getElementById('domain').value;
+        if (domain) {
+            queryDomain();
+        }
+    });
     
-    // 处理上传的JSON文件
-    function processJsonFile() {
-        const fileInput = document.getElementById('fileInput');
+    function queryDomain() {
+        const domain = document.getElementById('domain').value;
         const loadingBar = document.getElementById('loading-bar');
         
-        if (!fileInput.files || fileInput.files.length === 0) {
-            alert('请先选择JSON文件');
+        if (!domain) {
+            alert('请输入域名');
             return;
         }
         
         // 显示加载条
         loadingBar.style.width = '50%';
         
-        const file = fileInput.files[0];
-        const reader = new FileReader();
+        // 更新URL，不刷新页面
+        window.history.pushState({}, '', `/dns_query?domain=${domain}`);
         
-        reader.onload = function(e) {
-            const content = e.target.result;
-            
-            try {
-                const jsonData = JSON.parse(content);
-                // 转换JSON数据成我们可视化需要的格式
-                const processedData = convertJsonToVisualData(jsonData);
-                visualizeDnsData(processedData);
+        // 发送请求到后端
+        fetch(`/dns_query_data?domain=${domain}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应不正常');
+                }
+                return response.json();
+            })
+            .then(data => {
+                visualizeDnsData(data);
                 
                 // 完成加载
                 loadingBar.style.width = '100%';
                 setTimeout(() => {
                     loadingBar.style.width = '0';
                 }, 500);
-            } catch (error) {
-                console.error('解析JSON数据失败:', error);
-                alert('解析JSON数据失败: ' + error.message);
+            })
+            .catch(error => {
+                console.error('获取DNS数据失败:', error);
+                alert('获取DNS数据失败: ' + error.message);
                 loadingBar.style.width = '0';
-            }
-        };
-        
-        reader.onerror = function() {
-            alert('读取文件失败');
-            loadingBar.style.width = '0';
-        };
-        
-        reader.readAsText(file);
-    }
-    
-    // 将JSON数据转换为可视化所需的格式
-    function convertJsonToVisualData(jsonData) {
-        // 获取域名
-        const domainName = Object.keys(jsonData)[0];
-        const domainData = jsonData[domainName];
-        
-        const dnsRecords = [];
-        const glueRecords = [];
-        const domainDependencies = [];
-        
-        // 处理解析步骤
-        domainData['解析步骤'].forEach((step, index) => {
-            // 提取服务器和IP信息
-            let serverName = '';
-            let serverIP = '';
-            if (step['使用的NS服务器']) {
-                const serverInfo = step['使用的NS服务器'].match(/([^(]+)\s*\(([^)]+)\)/);
-                if (serverInfo) {
-                    serverName = serverInfo[1].trim();
-                    serverIP = serverInfo[2].trim();
-                }
-            }
-            
-            // 创建记录
-            dnsRecords.push({
-                step_number: step['步骤'],
-                query_domain: step['查询内容'],
-                parent_domain: step['父域'],
-                server_used: step['使用的NS服务器'] || '',
-                record_type: step['结果']['类型'],
-                record_values: step['结果']['类型'] === 'CNAME' ? 
-                               step['结果']['记录'][0] : 
-                               step['结果']['记录'],
-                status: step['状态'],
-                note: step['备注']
             });
-        });
-        
-        // 处理Glue记录
-        for (const [nsName, ipData] of Object.entries(domainData['Glue记录'])) {
-            if (ipData['A'] && ipData['A'].length > 0) {
-                ipData['A'].forEach(ip => {
-                    glueRecords.push({
-                        ns_name: nsName,
-                        ip_address: ip
-                    });
-                });
-            }
-        }
-        
-        // 处理域名依赖关系
-        for (const [parent, children] of Object.entries(domainData['域名依赖关系'])) {
-            children.forEach(child => {
-                domainDependencies.push({
-                    domain: child,
-                    parent_domain: parent
-                });
-            });
-        }
-        
-        // 创建查询信息
-        const queryInfo = {
-            domain_name: domainName,
-            resolution_status: domainData['解析总结']['解析状态'],
-            total_steps: domainData['解析步骤'].length
-        };
-        
-        return {
-            queries: [queryInfo],
-            dns_records: dnsRecords,
-            glue_records: glueRecords,
-            domain_dependencies: domainDependencies
-        };
     }
     
     // 可视化DNS数据
     function visualizeDnsData(data) {
-        if (!data || !data.queries || !data.dns_records || !data.domain_dependencies) {
-            alert('数据格式不正确');
-            return;
-        }
+        // 获取域名
+        const domainName = Object.keys(data)[0];
+        const domainData = data[domainName];
         
         // 更新基本信息
-        const query = data.queries[0];
-        document.getElementById('domain-name').textContent = query.domain_name;
-        document.getElementById('resolution-status').textContent = query.resolution_status;
-        document.getElementById('total-steps').textContent = query.total_steps;
+        document.getElementById('domain-name').textContent = domainName;
+        document.getElementById('resolution-status').textContent = domainData.解析总结.解析状态;
+        document.getElementById('total-steps').textContent = domainData.解析步骤.length;
+        document.getElementById('total-time').textContent = domainData.解析总结.总耗时;
         
         // 创建节点和边
         const nodes = [];
@@ -474,22 +382,29 @@
         
         // 处理域名依赖关系
         const domainParentMap = new Map();
-        data.domain_dependencies.forEach(dep => {
-            domainParentMap.set(dep.domain, dep.parent_domain);
-        });
+        for (const [parent, children] of Object.entries(domainData.域名依赖关系)) {
+            for (const child of children) {
+                domainParentMap.set(child, parent);
+            }
+        }
         
         // 按步骤顺序处理DNS记录
-        data.dns_records.forEach(record => {
-            const step = record.step_number;
-            const queryDomain = record.query_domain;
-            const parentDomain = record.parent_domain;
-            const recordType = record.record_type;
+        domainData.解析步骤.forEach(record => {
+            const step = record.步骤;
+            const queryDomain = record.查询内容;
+            const parentDomain = record.父域;
+            const recordType = record.结果.类型;
             
             // 创建查询域名节点
             const queryDomainId = addDomainNode(queryDomain);
             
             // 创建父域节点
-            const parentDomainId = addDomainNode(parentDomain, 'parent_domain');
+            let parentDomainId;
+            if (parentDomain === '.') {
+                parentDomainId = rootNodeId;
+            } else {
+                parentDomainId = addDomainNode(parentDomain, 'parent_domain');
+            }
             
             // 存储步骤信息
             if (!stepMap.has(step)) {
@@ -504,8 +419,8 @@
             }
             
             // 处理服务器信息
-            if (record.server_used && record.server_used.trim() !== '') {
-                const serverParts = record.server_used.match(/([^(]+)\s*\(([^)]+)\)/);
+            if (record.使用的NS服务器 && record.使用的NS服务器.trim() !== '') {
+                const serverParts = record.使用的NS服务器.match(/([^(]+)\s*\(([^)]+)\)/);
                 if (serverParts) {
                     const serverName = serverParts[1].trim();
                     const serverIP = serverParts[2].trim();
@@ -526,8 +441,8 @@
             switch(recordType) {
                 case 'NS':
                     // 添加NS记录
-                    if (Array.isArray(record.record_values)) {
-                        record.record_values.forEach(ns => {
+                    if (Array.isArray(record.结果.记录)) {
+                        record.结果.记录.forEach(ns => {
                             const nsId = addNSNode(ns);
                             stepMap.get(step).targetIds.push(nsId);
                         });
@@ -536,8 +451,8 @@
                     
                 case 'A':
                     // 添加A记录
-                    if (Array.isArray(record.record_values)) {
-                        record.record_values.forEach(ip => {
+                    if (Array.isArray(record.结果.记录)) {
+                        record.结果.记录.forEach(ip => {
                             const ipId = addIPNode(ip);
                             stepMap.get(step).targetIds.push(ipId);
                         });
@@ -546,9 +461,11 @@
                     
                 case 'CNAME':
                     // 添加CNAME记录
-                    const cnameTarget = record.record_values;
-                    const cnameId = addCNAMENode(cnameTarget);
-                    stepMap.get(step).targetIds.push(cnameId);
+                    if (Array.isArray(record.结果.记录) && record.结果.记录.length > 0) {
+                        const cnameTarget = record.结果.记录[0];
+                        const cnameId = addCNAMENode(cnameTarget);
+                        stepMap.get(step).targetIds.push(cnameId);
+                    }
                     break;
                     
                 case 'ERROR':
@@ -557,7 +474,7 @@
                     if (!nodeExists(errorId)) {
                         nodes.push({
                             id: errorId,
-                            label: record.note,
+                            label: record.备注,
                             group: 'error'
                         });
                         nodeIds.add(errorId);
@@ -569,56 +486,58 @@
         
         // 处理Glue记录
         const nsToIpMap = new Map();
-        data.glue_records.forEach(glue => {
-            const nsId = `ns_${glue.ns_name}`;
-            const ipId = `server_ip_${glue.ip_address}`;
+        for (const [ns, data] of Object.entries(domainData.Glue记录)) {
+            const nsId = `ns_${ns}`;
             
             if (!nodeExists(nsId)) {
                 nodes.push({
                     id: nsId,
-                    label: glue.ns_name,
+                    label: ns,
                     group: 'ns'
                 });
                 nodeIds.add(nsId);
-            }
-            
-            if (!nodeExists(ipId)) {
-                nodes.push({
-                    id: ipId,
-                    label: glue.ip_address,
-                    group: 'ns_ip'
-                });
-                nodeIds.add(ipId);
             }
             
             // 存储NS到IP的映射
             if (!nsToIpMap.has(nsId)) {
                 nsToIpMap.set(nsId, []);
             }
-            nsToIpMap.get(nsId).push(ipId);
-        });
+            
+            // 处理A记录
+            if (data.A && data.A.length > 0) {
+                data.A.forEach(ip => {
+                    const ipId = addIPNode(ip, true);
+                    nsToIpMap.get(nsId).push(ipId);
+                });
+            }
+            
+            // 处理AAAA记录
+            if (data.AAAA && data.AAAA.length > 0) {
+                data.AAAA.forEach(ip => {
+                    const ipId = addIPNode(ip, true);
+                    nsToIpMap.get(nsId).push(ipId);
+                });
+            }
+        }
         
         // 按照解析步骤顺序创建边
         let prevStep = null;
         
         // 首先添加域名依赖关系的边
-        data.domain_dependencies.forEach(dep => {
-            const domainId = `domain_${dep.domain}`;
-            const parentId = `domain_${dep.parent_domain}`;
-            addEdge(domainId, parentId, 'isSubdomainOf');
+        for (const [child, parent] of domainParentMap.entries()) {
+            const childId = `domain_${child}`;
+            let parentId;
             
-            // 如果父域是顶级域名(如com, org, net等)，将其连接到根域名
-            if (dep.parent_domain === '.') {
-                addEdge(domainId, rootNodeId, 'isSubdomainOf');
+            if (parent === '.') {
+                parentId = rootNodeId;
+            } else {
+                parentId = `domain_${parent}`;
             }
-        });
-        
-        // 确保所有顶级域名都连接到根域名
-        nodes.forEach(node => {
-            if (node.group === 'parent_domain' && node.label === '.' && !edgeExists(`domain_${node.label}`, rootNodeId)) {
-                addEdge(`domain_${node.label}`, rootNodeId, 'isSubdomainOf');
+            
+            if (nodeExists(childId) && nodeExists(parentId)) {
+                addEdge(childId, parentId, 'isSubdomainOf');
             }
-        });
+        }
         
         // 按步骤顺序添加边
         for (let i = 1; i <= stepMap.size; i++) {
@@ -670,200 +589,75 @@
         
         // 创建网络图
         const container = document.getElementById('mynetwork');
-        const visNodes = new vis.DataSet(nodes);
-        const visEdges = new vis.DataSet(edges);
-        const visData = {nodes: visNodes, edges: visEdges};
         
-        // 添加说明文字
-        const infoDiv = document.createElement('div');
-        infoDiv.style.position = 'absolute';
-        infoDiv.style.top = '10px';
-        infoDiv.style.left = '10px';
-        infoDiv.style.padding = '10px';
-        infoDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-        infoDiv.style.border = '1px solid #ddd';
-        infoDiv.style.borderRadius = '5px';
-        infoDiv.style.fontSize = '14px';
-        infoDiv.style.zIndex = '1000';
-        infoDiv.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 5px;">DNS递归解析流程图</div>
-            <div>此图展示了DNS解析的完整递归过程：</div>
-            <div>1. 从根服务器(.)开始查询</div>
-            <div>2. 逐级查询顶级域、二级域等</div>
-            <div>3. 最终解析到IP地址或CNAME记录</div>
-            <div style="margin-top: 5px;"><small>提示：按住Ctrl键可以缩放图表</small></div>
-        `;
-        container.appendChild(infoDiv);
+        // 定义节点组的样式
+        const groups = {
+            root: {
+                color: { background: '#FF8C00' },
+                font: { size: 18 }
+            },
+            domain: {
+                color: { background: '#B5BEED' },
+                font: { size: 16 }
+            },
+            parent_domain: {
+                color: { background: 'skyblue' },
+                font: { size: 16 }
+            },
+            ns: {
+                color: { background: 'lightgreen' },
+                font: { size: 14 }
+            },
+            ns_ip: {
+                color: { background: 'lightblue' },
+                font: { size: 14 }
+            },
+            ip: {
+                color: { background: 'yellow' },
+                font: { size: 14 }
+            },
+            cname: {
+                color: { background: 'pink' },
+                font: { size: 14 }
+            },
+            error: {
+                color: { background: '#FF9999' },
+                font: { size: 14 }
+            }
+        };
         
         const options = {
-            groups: {
-                domain: {color: {background: '#B5BEED'}, font: {multi: 'md', size: 16}},
-                parent_domain: {shape: 'box', color: {background: 'skyblue'}, font: {size: 14}},
-                ns: {shape: 'box', color: {background: 'lightgreen'}, font: {size: 14}},
-                ns_ip: {shape: 'box', color: {background: 'lightblue'}, font: {size: 14}},
-                ip: {shape: 'box', color: {background: 'yellow'}, font: {size: 14}},
-                cname: {shape: 'box', color: {background: 'pink'}, font: {size: 14}},
-                error: {shape: 'box', color: {background: '#FF9999'}, font: {size: 14}},
-                root: {shape: 'dot', color: {background: '#FF8C00'}, size: 20, font: {size: 16, bold: true}}
-            },
+            groups: groups,
             physics: {
+                stabilization: true,
                 barnesHut: {
                     gravitationalConstant: -2000,
                     centralGravity: 0.3,
-                    springLength: 180,
-                    springConstant: 0.05,
+                    springLength: 150,
+                    springConstant: 0.04,
                     damping: 0.09
-                },
-                solver: 'barnesHut'
-            },
-            edges: {
-                smooth: true,
-                arrows: {
-                    to: {
-                        enabled: true,
-                        scaleFactor: 0.8
-                    }
-                },
-                color: {
-                    inherit: false,
-                    color: '#666666'
-                },
-                font: {
-                    size: 12,
-                    align: 'middle'
                 }
             },
             interaction: {
                 navigationButtons: true,
-                keyboard: true,
-                tooltipDelay: 200,
-                hover: true,
-                zoomView: true
+                keyboard: true
             }
         };
         
-        const network = new vis.Network(container, visData, options);
+        const network = new vis.Network(container, {nodes: nodes, edges: edges}, options);
         
-        // 添加键盘事件监听器
-        let ctrlPressed = false;
-        document.addEventListener('keydown', function (event) {
-            if (event.ctrlKey) {
-                ctrlPressed = true;
-                network.setOptions({interaction: {zoomView: true}});
-            }
-        });
-        document.addEventListener('keyup', function (event) {
-            if (!event.ctrlKey) {
-                ctrlPressed = false;
-                network.setOptions({interaction: {zoomView: false}});
-            }
-        });
-        
-        // 添加双击事件监听器
-        network.on('doubleClick', function (params) {
+        // 双击节点显示信息
+        network.on("doubleClick", function (params) {
             if (params.nodes.length > 0) {
-                const clickedNode = visNodes.get(params.nodes[0]);
-                const groupMap = {
-                    'ns_ip': 'NS服务器IP',
-                    'ip': 'A记录(IP地址)',
-                    'domain': '查询域名',
-                    'ns': '权威服务器(NS)',
-                    'parent_domain': '父域',
-                    'cname': 'CNAME记录',
-                    'error': '错误',
-                    'root': '根域名(.)'
-                };
-                document.getElementById('node_name').value = clickedNode.label;
-                document.getElementById('group_name').value = groupMap[clickedNode.group] || clickedNode.group;
-            }
-        });
-        
-        // 监听节点拖动事件
-        network.on('dragStart', function (params) {
-            if (params.nodes.length > 0) {
-                network.storePositions();
-                options.physics.barnesHut.springLength = 280;
-                network.setOptions(options);
-            }
-        });
-        
-        // 拖动结束还原边的长度
-        network.on('dragEnd', function (params) {
-            if (params.nodes.length > 0) {
-                network.storePositions();
-                options.physics.barnesHut.springLength = 180;
-                network.setOptions(options);
-            }
-        });
-        
-        // 添加解析步骤记录
-        const recordsDiv = document.getElementById('records');
-        recordsDiv.innerHTML = '<h3>DNS递归解析步骤:</h3>';
-        
-        data.dns_records.forEach((step, index) => {
-            const stepDiv = document.createElement('div');
-            stepDiv.style.marginBottom = '15px';
-            stepDiv.style.borderBottom = '1px solid #ddd';
-            stepDiv.style.paddingBottom = '10px';
-            stepDiv.style.fontSize = '14px';
-            
-            let recordValues = '';
-            if (Array.isArray(step.record_values)) {
-                if (step.record_values.length > 3) {
-                    recordValues = `${step.record_values.slice(0, 3).join(', ')}... (共${step.record_values.length}条)`;
-                } else {
-                    recordValues = step.record_values.join(', ');
+                const nodeId = params.nodes[0];
+                const node = nodes.find(n => n.id === nodeId);
+                if (node) {
+                    document.getElementById('node_name').value = node.label;
+                    document.getElementById('group_name').value = node.group;
                 }
-            } else {
-                recordValues = step.record_values;
             }
-            
-            // 根据记录类型设置不同的颜色
-            let typeColor = '';
-            switch(step.record_type) {
-                case 'NS': typeColor = 'lightgreen'; break;
-                case 'A': typeColor = 'yellow'; break;
-                case 'CNAME': typeColor = 'pink'; break;
-                case 'ERROR': typeColor = '#FF9999'; break;
-                default: typeColor = '#B5BEED';
-            }
-            
-            stepDiv.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 5px;">
-                    <span style="background-color: #B5BEED; padding: 2px 5px; border-radius: 3px;">步骤 ${step.step_number}</span> 
-                    <span style="background-color: ${typeColor}; padding: 2px 5px; border-radius: 3px; margin-left: 5px;">${step.record_type}</span>
-                </div>
-                <div style="margin-left: 10px;">
-                    <div><strong>查询域名:</strong> ${step.query_domain}</div>
-                    <div><strong>父域:</strong> ${step.parent_domain}</div>
-                    ${step.server_used ? `<div><strong>使用服务器:</strong> ${step.server_used}</div>` : ''}
-                    <div>
-                        <strong>结果:</strong> 
-                        <span style="color: ${step.status === 'SUCCESS' ? 'green' : 'red'};">
-                            ${step.record_type === 'NS' ? '发现NS记录' : 
-                              step.record_type === 'A' ? '发现IP地址' : 
-                              step.record_type === 'CNAME' ? '发现CNAME别名' : 
-                              step.record_type === 'ERROR' ? '查询失败' : '其他记录'}
-                        </span>
-                    </div>
-                    <div><strong>记录值:</strong> ${recordValues}</div>
-                    <div><strong>说明:</strong> ${step.note}</div>
-                </div>
-            `;
-            
-            recordsDiv.appendChild(stepDiv);
         });
-        
-        // 添加滚动样式
-        recordsDiv.style.maxHeight = '600px';
-        recordsDiv.style.overflowY = 'auto';
-        recordsDiv.style.padding = '10px';
-        recordsDiv.style.border = '1px solid #ddd';
-        recordsDiv.style.borderRadius = '5px';
-        recordsDiv.style.backgroundColor = '#f9f9f9';
     }
 </script>
-
 </body>
 </html>
-    

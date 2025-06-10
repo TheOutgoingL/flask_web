@@ -1,5 +1,5 @@
 # coding=utf-8
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 import socket
 import requests
 import dns.resolver
@@ -7,6 +7,10 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 import os
 from urllib.parse import quote_plus
+# 导入NeoVis相关模块
+from py2neo import Graph
+from pyvis.network import Network
+from collections import defaultdict
 
 app = Flask(__name__)
 
@@ -189,6 +193,294 @@ def get_domain_graph_url():
         "url": url,
         "message": "点击URL查看域名解析图"
     })
+
+# Neo4j相关函数
+def connect_to_neo4j():
+    try:
+        graph = Graph("bolt://localhost:7687", auth=("neo4j", "liu2568910969"))
+        print("成功连接到Neo4j数据库")
+        return graph
+    except Exception as e:
+        print(f"连接Neo4j数据库失败: {e}")
+        return None
+
+def query_ns_graph(graph, domain):
+    # 定义查询函数
+    def execute_query(domain_name):
+        query = f"""
+        MATCH path = (n {{name: '{domain_name}'}})-[r*1..3]-(m)
+        WHERE 'CNAME' IN labels(m) OR 'DNS' IN labels(m)
+        RETURN path as r
+        LIMIT 200
+        """
+        try:
+            result = graph.run(query).data()
+            print(f"查询到 {len(result)} 条记录")
+            return result
+        except Exception as e:
+            print(f"查询失败: {e}")
+            return []
+
+    # 首次使用原始域名查询
+    result = execute_query(domain)
+    
+    # 如果结果为空且域名不包含"."，尝试添加"."后再次查询
+    if not result and domain[-1] != ".":
+        domain_with_dot = domain + "."
+        print(f"首次查询无结果，尝试使用 {domain_with_dot} 进行查询")
+        result = execute_query(domain_with_dot)
+    
+    return result
+
+def visualize_neo_graph(data, domain, output_file):
+    """使用pyvis生成Neo4j关联图谱HTML"""
+    net = Network(height="800px", width="100%", directed=True, notebook=False)
+    net.force_atlas_2based(gravity=-30, central_gravity=0.05, spring_length=70, spring_strength=0.1)
+
+    # 存储节点颜色和连接数
+    node_colors = {}
+    node_connections = defaultdict(int)  # 用于统计每个节点的连接数
+    color_map = {}
+    color_list = ["#FF5733", "#33FF57", "#3357FF", "#F39C12", "#9B59B6", "#1ABC9C", "#E74C3C"]
+    color_index = 0
+    edges_added = set()
+
+    # 第一次遍历：统计每个节点的连接数
+    for record in data:
+        paths = record["r"]
+        for path in paths:
+            start_node = path.start_node
+            end_node = path.end_node
+            start_id = str(start_node.identity)
+            end_id = str(end_node.identity)
+            
+            # 增加节点连接计数
+            node_connections[start_id] += 1
+            node_connections[end_id] += 1
+            
+            # 记录节点颜色
+            for node in [start_node, end_node]:
+                node_id = str(node.identity)
+                node_label = list(node.labels)[0] if node.labels else "Undefined"
+                
+                if node_label not in color_map:
+                    color_map[node_label] = color_list[color_index % len(color_list)]
+                    color_index += 1
+                    
+                node_colors[node_id] = color_map[node_label]
+    
+    # 计算节点大小的最大值和最小值
+    min_connections = 1
+    max_connections = max(node_connections.values()) if node_connections else 1
+    
+    # 第二次遍历：添加节点和边
+    added_nodes = set()
+    for record in data:
+        paths = record["r"]
+        for path in paths:
+            start_node = path.start_node
+            end_node = path.end_node
+            start_id = str(start_node.identity)
+            end_id = str(end_node.identity)
+            
+            # 添加节点（如果尚未添加）
+            for node in [start_node, end_node]:
+                node_id = str(node.identity)
+                if node_id not in added_nodes:
+                    node_label = list(node.labels)[0] if node.labels else "Undefined"
+                    node_name = node.get("name", node_label)
+                    
+                    # 根据连接数动态调整节点大小（最小15，最大50）
+                    connection_count = node_connections[node_id]
+                    node_size = 15 + (connection_count - min_connections) * 35 / (max_connections - min_connections) if max_connections > min_connections else 20
+                    
+                    # 不在外部显示标签，而是在节点内部展示
+                    net.add_node(
+                        node_id,
+                        title=f"{node_name}\n连接数: {connection_count}\n{str(dict(node))}",  # 鼠标悬浮显示属性和连接数
+                        color=node_colors[node_id],
+                        size=node_size,  # 动态节点大小
+                        label=node_name,
+                        shape="dot",  # 使用圆形节点以便更好地显示内部标签
+                        font={"size": 10, "color": "black", "face": "Arial", "strokeWidth": 0},  # 减小字体大小并移除描边
+                        distance=100,
+                    )
+                    added_nodes.add(node_id)
+            
+            # 避免重复边
+            edge_key = (start_id, end_id)
+            if edge_key not in edges_added:
+                net.add_edge(start_id, end_id, label=path.__class__.__name__, color="#A5ABB6",
+                arrows={"to": {"enabled": True, "scaleFactor": 0.5}},  # 缩小箭头大小为默认值的一半
+                font={"size": 10, "color": "#A5ABB6"}  # 边的文字样式
+                )
+                edges_added.add(edge_key)
+                
+    # 修改网络图的CSS样式以为图例留出空间
+    net.set_options("""
+    var options = {
+      "physics": {
+        "enabled": true,
+        "forceAtlas2Based": {
+          "gravitationalConstant": -50,
+          "centralGravity": 0.01,
+          "springLength": 20,
+          "springConstant": 0.08,
+          "damping": 0.4,
+          "avoidOverlap": 0
+        },
+        "stabilization": {"enabled": true, "iterations": 150}
+      }
+    }
+    """)
+    
+    # 生成HTML文件，确保使用绝对路径
+    abs_output_file = output_file
+    net.write_html(abs_output_file, notebook=False)
+    
+    # 读取生成的HTML文件并添加图例
+    with open(abs_output_file, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    
+    # 添加图例的CSS样式
+    legend_css = """
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #legend {
+            width: 300px;
+            min-width: 300px;
+            height: 100vh;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        #mynetwork {
+            flex: 1;
+            height: 100vh !important;
+            border: none !important;
+            margin: 0 !important;
+        }
+        .card {
+            flex: 1;
+            height: 100vh;
+            margin: 0 !important;
+            border: none !important;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-body {
+            flex: 1;
+            padding: 0 !important;
+        }
+        table.legendTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .legendTable th, .legendTable td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .legendTable th {
+            background-color: #f2f2f2;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            border-radius: 3px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+    """
+    
+    # 创建图例HTML
+    legend_html = f"""
+    <div id="legend">
+        <h2>节点类型图例</h2>
+        <table class="legendTable">
+            <tr>
+                <th>颜色</th>
+                <th>节点类型</th>
+            </tr>
+    """
+    
+    # 为每种节点类型添加一行
+    for label, color in color_map.items():
+        legend_html += f"""
+            <tr>
+                <td><span class="color-box" style="background-color: {color};"></span></td>
+                <td>{label}</td>
+            </tr>
+        """
+    
+    legend_html += f"""
+        </table>
+        <div style="margin-top: 20px;">
+            <h3>查询信息</h3>
+            <p><strong>域名:</strong> {domain}</p>
+        </div>
+    </div>
+    """
+    
+    # 在head中插入CSS
+    html_content = html_content.replace('</head>', legend_css + '</head>')
+    
+    # 在body开始后插入图例
+    html_content = html_content.replace('<body>', '<body>' + legend_html)
+    
+    # 重新写入文件
+    with open(abs_output_file, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    
+    print(f"图谱已保存为 {abs_output_file}")
+
+@app.route('/node/association-graph', methods=['GET'])
+def get_association_graph():
+    domain = request.args.get('domain')
+    if not domain:
+        return "<h1>请提供域名参数</h1><p>例如: /node/association-graph?domain=example.com</p>"
+    
+    try:
+        # 连接Neo4j数据库
+        graph = connect_to_neo4j()
+        if not graph:
+            return "<h1>无法连接到Neo4j数据库</h1>"
+        
+        # 查询图谱数据
+        data = query_ns_graph(graph, domain)
+        
+        if not data:
+            return f"<h1>未找到域名 {domain} 的关联数据</h1><p>请检查域名是否正确或数据库中是否存在相关数据。</p>"
+        
+        # 使用pyvis生成图谱HTML并保存到固定路径
+        output_file = "./templates/neo-association.html"
+        print(f"生成图谱HTML文件: {output_file}")
+        visualize_neo_graph(data, domain, output_file)
+        
+        # 直接返回生成的HTML文件内容
+        with open(output_file, 'r', encoding='utf-8') as f:
+            return f.read()
+        
+    except Exception as e:
+        print(f"获取关联数据失败: {e}")
+        return f"<h1>获取关联数据失败</h1><p>错误信息: {str(e)}</p>"
+
 
 @app.errorhandler(404)
 def page_not_found(e):

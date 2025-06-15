@@ -33,23 +33,55 @@ class DomainQuery(db.Model):
 
 @app.route('/')
 def hello_world():
+    """
+    主页路由
+    功能：返回主页面模板
+    调用方法：GET /
+    返回：渲染的index_split.html模板
+    """
     return render_template("index_split.html")
 
 @app.route('/split/')
 def index_split():
+    """
+    分割页面路由
+    功能：返回分割页面模板
+    调用方法：GET /split/
+    返回：渲染的index_split.html模板
+    """
     return render_template("index_split.html")
 
 @app.route('/dns_visualization/')
 def dns_visualization():
+    """
+    DNS可视化页面路由
+    功能：返回DNS可视化页面模板
+    调用方法：GET /dns_visualization/
+    返回：渲染的dns_visualization.html模板
+    """
     return render_template("dns_visualization.html")
 
 @app.route('/dns_query')
 def dns_query():
+    """
+    DNS查询页面路由
+    功能：返回DNS查询可视化页面，可接收域名参数
+    调用方法：GET /dns_query?domain=example.com
+    参数：domain - 要查询的域名（可选）
+    返回：渲染的dns_query_visualization.html模板，传入域名参数
+    """
     domain = request.args.get('domain', '')
     return render_template("dns_query_visualization.html", domain=domain)
 
 @app.route('/dns_query_data')
 def dns_query_data():
+    """
+    DNS查询数据API
+    功能：执行DNS解析并返回解析日志数据
+    调用方法：GET /dns_query_data?domain=example.com
+    参数：domain - 要查询的域名（必需）
+    返回：JSON格式的DNS解析日志数据或错误信息
+    """
     domain = request.args.get('domain')
     if not domain:
         return jsonify({"error": "请提供域名参数"}), 400
@@ -77,9 +109,15 @@ def dns_query_data():
     except Exception as e:
         return jsonify({"error": f"解析域名失败: {str(e)}"}), 500
 
-# 新增API端点，只返回网络可视化图的内容
 @app.route('/network_only', methods=['GET'])
 def network_only():
+    """
+    网络可视化图页面路由
+    功能：返回只包含网络可视化图的页面
+    调用方法：GET /network_only?domain=example.com
+    参数：domain - 要可视化的域名（可选）
+    返回：渲染的network_only.html模板，可传入域名参数
+    """
     domain = request.args.get('domain')
     if domain:
         return render_template("network_only.html", domain=domain)
@@ -88,6 +126,13 @@ def network_only():
 
 @app.route('/query', methods=['POST'])
 def query():
+    """
+    域名查询API
+    功能：查询域名信息，支持通配符查询和普通查询
+    调用方法：POST /query
+    请求体：JSON格式 {"domain": "example.com"} 或 {"domain": "*.example.com"}
+    返回：JSON格式的域名信息或子域名列表
+    """
     data = request.json
     domain = data.get('domain')
     print(f"Received domain: {domain}")  # 打印接收到的数据
@@ -101,6 +146,12 @@ def query():
         return query_domain(domain)
 
 def query_domain(domain):
+    """
+    查询单个域名信息
+    功能：从数据库查询域名信息，如不存在则执行DNS查询并存储
+    参数：domain - 要查询的域名
+    返回：JSON格式的域名信息
+    """
     # 检查数据库中是否已经存在该域名的记录
     existing_query = DomainQuery.query.filter_by(domain=domain).first()
     if existing_query:
@@ -122,6 +173,13 @@ def query_domain(domain):
 
         return jsonify(domain_info)
 def get_familyDomain(domain):
+    """
+    获取域名的家族域名列表
+    功能：将域名分解为各级父域名
+    参数：domain - 输入域名
+    返回：包含各级父域名的列表
+    示例：输入"www.example.com"返回["example.com", "com"]
+    """
     segments = domain.split(".")
     family_domain = []
     #  输出segments列表的大小
@@ -136,6 +194,12 @@ def get_familyDomain(domain):
     return  family_domain
 
 def query_wildcard(base_domain):
+    """
+    通配符域名查询
+    功能：查询数据库中所有匹配基域的子域名信息
+    参数：base_domain - 基础域名
+    返回：JSON格式的子域名信息列表
+    """
     # 获取与基域匹配的所有子域
     subdomain_queries = DomainQuery.query.filter(DomainQuery.domain.like(f"%.{base_domain}")).all()
     print(subdomain_queries)
@@ -145,24 +209,54 @@ def query_wildcard(base_domain):
 
 @app.route('/server-count', methods=['GET'])
 def server_count():
+    """
+    服务器计数API
+    功能：返回数据库中域名查询记录的总数
+    调用方法：GET /server-count
+    返回：JSON格式的计数信息 {"count": 数量}
+    """
     count = DomainQuery.query.count()
     return jsonify({'count': count})
 
 @app.route('/test/')
 def test():
+    """http://127.0.0.1:50005/node/association-graph?domain=dns2.cdn20.info
+    测试页面路由
+    功能：返回测试页面模板
+    调用方法：GET /test/
+    返回：渲染的test.html模板
+    """
     return render_template("test.html")
 
 @app.route('/index000/')
 def index000():
+    """
+    索引000页面路由
+    功能：返回index000页面模板
+    调用方法：GET /index000/
+    返回：渲染的index000.html模板
+    """
     return render_template("index000.html")
 
 @app.route('/index/')
 def index():
+    """
+    索引页面路由
+    功能：返回index页面模板
+    调用方法：GET /index/
+    返回：渲染的index.html模板
+    """
     return render_template("index.html")
 
 @app.route('/domain-graph/<domain>', methods=['GET'])
 def domain_graph(domain):
-    """接收域名参数并展示该域名的解析图"""
+    """
+    域名解析图页面路由
+    功能：接收域名参数并展示该域名的解析图，如数据库中不存在则先查询并存储
+    调用方法：GET /domain-graph/example.com
+    参数：domain - URL路径中的域名
+    返回：渲染的index_split.html模板，传入域名参数
+    """
     # 检查数据库中是否已经存在该域名的记录
     existing_query = DomainQuery.query.filter_by(domain=domain).first()
     if not existing_query:
@@ -178,7 +272,13 @@ def domain_graph(domain):
 
 @app.route('/api/domain-graph-url', methods=['GET'])
 def get_domain_graph_url():
-    """提供一个API接口，返回域名解析图的URL"""
+    """
+    域名解析图URL生成API
+    功能：根据提供的域名生成对应的解析图URL
+    调用方法：GET /api/domain-graph-url?domain=example.com
+    参数：domain - 要生成URL的域名（必需）
+    返回：JSON格式的URL信息，包含成功状态、域名、URL和提示信息
+    """
     domain = request.args.get('domain')
     if not domain:
         return jsonify({"error": "缺少域名参数"}), 400
@@ -194,8 +294,12 @@ def get_domain_graph_url():
         "message": "点击URL查看域名解析图"
     })
 
-# Neo4j相关函数
 def connect_to_neo4j():
+    """
+    连接Neo4j数据库
+    功能：建立与Neo4j数据库的连接
+    返回：Graph对象（成功）或None（失败）
+    """
     try:
         graph = Graph("bolt://localhost:7687", auth=("neo4j", "liu2568910969"))
         print("成功连接到Neo4j数据库")
@@ -205,6 +309,14 @@ def connect_to_neo4j():
         return None
 
 def query_ns_graph(graph, domain):
+    """
+    查询Neo4j中的域名关联图谱数据
+    功能：在Neo4j数据库中查询指定域名的关联路径
+    参数：
+        graph - Neo4j图数据库连接对象
+        domain - 要查询的域名
+    返回：查询结果列表，包含域名的关联路径数据
+    """
     # 定义查询函数
     def execute_query(domain_name):
         query = f"""
@@ -232,8 +344,100 @@ def query_ns_graph(graph, domain):
     
     return result
 
+def process_neo_graph_data(data, domain):
+    """
+    处理Neo4j图谱数据，转换为前端可用的格式
+    功能：将Neo4j查询结果转换为vis.js可以使用的节点和边数据
+    参数：
+        data - Neo4j查询返回的图谱数据
+        domain - 查询的域名
+    返回：包含nodes和edges的字典
+    """
+    from collections import defaultdict
+    import json
+    
+    # 存储节点和边
+    nodes = {}
+    edges = []
+    node_connections = defaultdict(int)
+    color_map = {}
+    color_list = ["#FF5733", "#33FF57", "#3357FF", "#F39C12", "#9B59B6", "#1ABC9C", "#E74C3C"]
+    color_index = 0
+    edges_added = set()
+    
+    # 第一次遍历：统计每个节点的连接数和收集节点信息
+    for record in data:
+        paths = record["r"]
+        for path in paths:
+            start_node = path.start_node
+            end_node = path.end_node
+            start_id = str(start_node.identity)
+            end_id = str(end_node.identity)
+            
+            # 增加节点连接计数
+            node_connections[start_id] += 1
+            node_connections[end_id] += 1
+            
+            # 收集节点信息
+            for node in [start_node, end_node]:
+                node_id = str(node.identity)
+                if node_id not in nodes:
+                    node_label = list(node.labels)[0] if node.labels else "Undefined"
+                    node_name = node.get("name", node_label)
+                    
+                    # 为节点类型分配颜色
+                    if node_label not in color_map:
+                        color_map[node_label] = color_list[color_index % len(color_list)]
+                        color_index += 1
+                    
+                    nodes[node_id] = {
+                        "id": node_id,
+                        "label": node_name,
+                        "title": f"{node_name}\n类型: {node_label}\n属性: {dict(node)}",
+                        "color": color_map[node_label],
+                        "type": node_label,
+                        "properties": dict(node)
+                    }
+            
+            # 收集边信息
+            edge_key = (start_id, end_id)
+            if edge_key not in edges_added:
+                edges.append({
+                    "from": start_id,
+                    "to": end_id,
+                    "label": path.__class__.__name__,
+                    "arrows": "to"
+                })
+                edges_added.add(edge_key)
+    
+    # 计算节点大小
+    min_connections = 1
+    max_connections = max(node_connections.values()) if node_connections else 1
+    
+    # 为节点添加大小信息
+    for node_id, node in nodes.items():
+        connection_count = node_connections[node_id]
+        node_size = 15 + (connection_count - min_connections) * 35 / (max_connections - min_connections) if max_connections > min_connections else 20
+        node["size"] = node_size
+        node["title"] += f"\n连接数: {connection_count}"
+    
+    return {
+        "nodes": list(nodes.values()),
+        "edges": edges,
+        "color_map": color_map,
+        "domain": domain
+    }
+
 def visualize_neo_graph(data, domain, output_file):
-    """使用pyvis生成Neo4j关联图谱HTML"""
+    """
+    使用pyvis生成Neo4j关联图谱HTML
+    功能：将Neo4j查询结果转换为可视化的网络图谱HTML文件
+    参数：
+        data - Neo4j查询返回的图谱数据
+        domain - 查询的域名
+        output_file - 输出HTML文件路径
+    返回：无（生成HTML文件到指定路径）
+    """
     net = Network(height="800px", width="100%", directed=True, notebook=False)
     net.force_atlas_2based(gravity=-30, central_gravity=0.05, spring_length=70, spring_strength=0.1)
 
@@ -452,41 +656,69 @@ def visualize_neo_graph(data, domain, output_file):
 
 @app.route('/node/association-graph', methods=['GET'])
 def get_association_graph():
+    """
+    Neo4j域名关联图谱API
+    功能：从Neo4j数据库查询域名关联数据并生成可视化图谱
+    调用方法：GET /node/association-graph?domain=example.com
+    参数：domain - 要查询关联图谱的域名（必需）
+    返回：渲染的neo-association.html模板页面或错误信息
+    """
     domain = request.args.get('domain')
     if not domain:
-        return "<h1>请提供域名参数</h1><p>例如: /node/association-graph?domain=example.com</p>"
+        return render_template('error.html', 
+                             title='参数错误', 
+                             message='请提供域名参数', 
+                             detail='例如: /node/association-graph?domain=example.com')
     
     try:
         # 连接Neo4j数据库
         graph = connect_to_neo4j()
         if not graph:
-            return "<h1>无法连接到Neo4j数据库</h1>"
+            return render_template('error.html', 
+                                 title='数据库连接错误', 
+                                 message='无法连接到Neo4j数据库')
         
         # 查询图谱数据
         data = query_ns_graph(graph, domain)
         
         if not data:
-            return f"<h1>未找到域名 {domain} 的关联数据</h1><p>请检查域名是否正确或数据库中是否存在相关数据。</p>"
+            return render_template('error.html', 
+                                 title='数据未找到', 
+                                 message=f'未找到域名 {domain} 的关联数据', 
+                                 detail='请检查域名是否正确或数据库中是否存在相关数据。')
         
-        # 使用pyvis生成图谱HTML并保存到固定路径
-        output_file = "./templates/neo-association.html"
-        print(f"生成图谱HTML文件: {output_file}")
-        visualize_neo_graph(data, domain, output_file)
+        # 处理图谱数据，转换为前端可用的格式
+        graph_data = process_neo_graph_data(data, domain)
         
-        # 直接返回生成的HTML文件内容
-        with open(output_file, 'r', encoding='utf-8') as f:
-            return f.read()
+        # 使用render_template返回模板，传递图谱数据
+        return render_template('neo-association.html', 
+                             domain=domain, 
+                             graph_data=graph_data)
         
     except Exception as e:
         print(f"获取关联数据失败: {e}")
-        return f"<h1>获取关联数据失败</h1><p>错误信息: {str(e)}</p>"
+        return render_template('error.html', 
+                             title='获取关联数据失败', 
+                             message='服务器内部错误', 
+                             detail=str(e))
 
 
 @app.errorhandler(404)
 def page_not_found(e):
+    """
+    404错误处理器
+    功能：处理页面未找到的错误
+    返回：404错误信息
+    """
     return 'This page does not exist.', 404
 
 def getCNAME(domain_name):
+    """
+    获取域名的CNAME记录
+    功能：查询指定域名的CNAME记录
+    参数：domain_name - 要查询的域名
+    返回：CNAME记录字符串（去除末尾点号）或None（查询失败）
+    """
     try:
         resolver = dns.resolver.Resolver()
         ans = resolver.resolve(domain_name, 'CNAME')
@@ -498,6 +730,12 @@ def getCNAME(domain_name):
         return None
 
 def get_all_ips(domain):
+    """
+    获取域名的所有A记录IP地址
+    功能：查询指定域名的所有A记录，返回IP地址列表
+    参数：domain - 要查询的域名
+    返回：IP地址字符串列表，查询失败返回空列表
+    """
     try:
         answers = dns.resolver.resolve(domain, 'A')
         ips = [str(rdata) for rdata in answers]
@@ -535,7 +773,12 @@ def get_all_ips(domain):
 #         return {"ip": ip, "country": "未知", "isp": "未知"}
 # # print(clean_data(get_domainInfo(domain)))
 def get_ip_info(ip):
-    """获取IP的详细信息（国家、ISP等）"""
+    """
+    获取IP的详细信息（国家、ISP等）
+    功能：通过ipplus360 API查询IP地址的地理位置和ISP信息
+    参数：ip - 要查询的IP地址
+    返回：包含IP、国家、ISP信息的字典，查询失败或ISP为空返回None
+    """
     try:
         # 调用 ipplus360 API
         api_key = "fQf9F6JO0hW4wGA9SanmZ3Dh7OR6SFf2YUdDWPiZDY5pGkVtIMw9HNuFvMWquwyn"
@@ -569,6 +812,12 @@ def get_ip_info(ip):
         return None
 
 def get_ips_info(domain):
+    """
+    获取域名所有IP的详细信息
+    功能：获取域名的所有IP地址，并查询每个IP的详细信息
+    参数：domain - 要查询的域名
+    返回：包含所有IP详细信息的列表
+    """
     ips = get_all_ips(domain)
     ip_info_list = []
     for ip in ips:
@@ -577,6 +826,12 @@ def get_ips_info(domain):
     return ip_info_list
 
 def get_domainInfo(domain):
+    """
+    获取域名的完整信息
+    功能：获取域名的DNS记录、NS记录、CNAME记录等完整信息
+    参数：domain - 要查询的域名
+    返回：包含域名完整信息的列表，每个元素包含[域名, CNAME, 家族域名, NS服务器, NS_IP, DNS_IP列表, 查找域名, IP信息列表]
+    """
     domain_info = []
     ips_info = []
     ip_set = set()  # 用于存储已经处理过的IP
@@ -640,6 +895,12 @@ def get_domainInfo(domain):
     return domain_info
 
 def clean_data(domain_info):
+    """
+    清理和整理域名信息数据
+    功能：将get_domainInfo返回的原始数据整理成结构化的字典格式
+    参数：domain_info - get_domainInfo函数返回的原始域名信息列表
+    返回：包含DNS、CNAME、家族域名、权威DNS、IP信息等的结构化字典
+    """
     dns_set = set()
     cname_set = set()
     family_domains_list = []

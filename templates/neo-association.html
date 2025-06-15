@@ -1,51 +1,15 @@
-<html>
-    <head>
-        <meta charset="utf-8">
-        
-            <script src="lib/bindings/utils.js"></script>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-            
-        
-<center>
-<h1></h1>
-</center>
-
-<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
-<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
-        <link
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
-          crossorigin="anonymous"
-        />
-        <script
-          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
-          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
-          crossorigin="anonymous"
-        ></script>
-
-
-        <center>
-          <h1></h1>
-        </center>
-        <style type="text/css">
-
-             #mynetwork {
-                 width: 100%;
-                 height: 800px;
-                 background-color: #ffffff;
-                 border: 1px solid lightgray;
-                 position: relative;
-                 float: left;
-             }
-
-             
-
-             
-
-             
-        </style>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>域名关联图谱 - {{ domain }}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Vis.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css">
     
     <style>
         body {
@@ -54,168 +18,265 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            font-family: Arial, sans-serif;
         }
+        
         #legend {
             width: 300px;
             min-width: 300px;
             height: 100vh;
             padding: 20px;
-            background-color: #f9f9f9;
-            border-right: 1px solid #ddd;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
             overflow-y: auto;
             box-sizing: border-box;
             flex-shrink: 0;
         }
-        #mynetwork {
-            flex: 1;
-            height: 100vh !important;
-            border: none !important;
-            margin: 0 !important;
-        }
-        .card {
+        
+        #network-container {
             flex: 1;
             height: 100vh;
-            margin: 0 !important;
-            border: none !important;
-            display: flex;
-            flex-direction: column;
+            position: relative;
         }
-        .card-body {
-            flex: 1;
-            padding: 0 !important;
+        
+        #mynetwork {
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            border: none;
         }
-        table.legendTable {
+        
+        .legend-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .legend-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
-        .legendTable th, .legendTable td {
-            padding: 8px;
+        
+        .legend-table th,
+        .legend-table td {
+            padding: 8px 12px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #dee2e6;
         }
-        .legendTable th {
-            background-color: #f2f2f2;
+        
+        .legend-table th {
+            background-color: #e9ecef;
+            font-weight: bold;
         }
+        
         .color-box {
             width: 20px;
             height: 20px;
             display: inline-block;
             border-radius: 3px;
-            margin-right: 5px;
+            margin-right: 8px;
             vertical-align: middle;
+            border: 1px solid #ccc;
         }
-        h2 {
-            margin-top: 0;
-            color: #333;
+        
+        .domain-info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .domain-info h4 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .stats h5 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        
+        .stat-item {
+            margin: 5px 0;
+            font-size: 0.9rem;
         }
     </style>
-    </head>
-
-
-    <body>
+</head>
+<body>
     <div id="legend">
-        <h2>节点类型图例</h2>
-        <table class="legendTable">
-            <tr>
-                <th>颜色</th>
-                <th>节点类型</th>
-            </tr>
-    
-            <tr>
-                <td><span class="color-box" style="background-color: #FF5733;"></span></td>
-                <td>FatherDNS</td>
-            </tr>
+        <div class="legend-title">域名关联图谱</div>
         
-            <tr>
-                <td><span class="color-box" style="background-color: #33FF57;"></span></td>
-                <td>Auth_DNS</td>
-            </tr>
+        <div class="domain-info">
+            <h4>查询域名</h4>
+            <p><strong>{{ domain }}</strong></p>
+        </div>
         
-            <tr>
-                <td><span class="color-box" style="background-color: #3357FF;"></span></td>
-                <td>CNAME</td>
-            </tr>
+        <div class="stats">
+            <h5>图谱统计</h5>
+            <div class="stat-item">节点数量: <span id="node-count">0</span></div>
+            <div class="stat-item">连接数量: <span id="edge-count">0</span></div>
+        </div>
         
-        </table>
+        {% if graph_data and graph_data.color_map %}
         <div style="margin-top: 20px;">
-            <h3>查询信息</h3>
-            <p><strong>域名:</strong> dns2.cdn20.info</p>
+            <h5>节点类型图例</h5>
+            <table class="legend-table">
+                <thead>
+                    <tr>
+                        <th>颜色</th>
+                        <th>节点类型</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for label, color in graph_data.color_map.items() %}
+                    <tr>
+                        <td><span class="color-box" style="background-color: {{ color }};"></span></td>
+                        <td>{{ label }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        <div style="margin-top: 20px;">
+            <button class="btn btn-primary btn-sm" onclick="fitNetwork()">适应窗口</button>
+            <button class="btn btn-secondary btn-sm" onclick="resetView()">重置视图</button>
         </div>
     </div>
     
-        <div class="card" style="width: 100%">
-            
-            
-            <div id="mynetwork" class="card-body"></div>
-        </div>
-
+    <div id="network-container">
+        <div id="mynetwork"></div>
+    </div>
+    
+    <!-- Vis.js JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"></script>
+    
+    <script>
+        // 图谱数据
+        const graphData = {{ graph_data | tojson | safe }};
         
+        // 创建节点和边的数据集
+        const nodes = new vis.DataSet(graphData.nodes || []);
+        const edges = new vis.DataSet(graphData.edges || []);
         
-
-        <script type="text/javascript">
-
-              // initialize global variables.
-              var edges;
-              var nodes;
-              var allNodes;
-              var allEdges;
-              var nodeColors;
-              var originalNodes;
-              var network;
-              var container;
-              var options, data;
-              var filter = {
-                  item : '',
-                  property : '',
-                  value : []
-              };
-
-              
-
-              
-
-              // This method is responsible for drawing the graph, returns the drawn network
-              function drawGraph() {
-                  var container = document.getElementById('mynetwork');
-
-                  
-
-                  // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#FF5733", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "128", "label": "gccdn.net", "shape": "dot", "size": 30.80267558528428, "title": "gccdn.net\n\u8fde\u63a5\u6570: 136\n{\u0027name\u0027: \u0027gccdn.net\u0027}"}, {"color": "#33FF57", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "133", "label": "dns2.cdn20.info.", "shape": "dot", "size": 38.29431438127091, "title": "dns2.cdn20.info.\n\u8fde\u63a5\u6570: 200\n{\u0027name\u0027: \u0027dns2.cdn20.info.\u0027}"}, {"color": "#33FF57", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "129", "label": "dns5.cdn30.org.", "shape": "dot", "size": 50.0, "title": "dns5.cdn30.org.\n\u8fde\u63a5\u6570: 300\n{\u0027name\u0027: \u0027dns5.cdn30.org.\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5305", "label": "connectivitycheck.platform.hihonorcloud.com.wswebcdn.com", "shape": "dot", "size": 15.234113712374581, "title": "connectivitycheck.platform.hihonorcloud.com.wswebcdn.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027connectivitycheck.platform.hihonorcloud.com.wswebcdn.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5268", "label": "pull-tsl-t1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-tsl-t1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-tsl-t1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5330", "label": "mauth.chinanetcenter.com.wscdns.com", "shape": "dot", "size": 15.234113712374581, "title": "mauth.chinanetcenter.com.wscdns.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027mauth.chinanetcenter.com.wscdns.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5155", "label": "pull-lls-ws-f1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-lls-ws-f1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-lls-ws-f1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5192", "label": "pull-hls-t1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-hls-t1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-hls-t1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5132", "label": "pull-lls-t1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-lls-t1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-lls-t1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5129", "label": "pull-flv-l1.ixigua.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-flv-l1.ixigua.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-flv-l1.ixigua.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5046", "label": "pull-flv-t1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-flv-t1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-flv-t1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4989", "label": "pull-rtmp-l1.ixigua.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-rtmp-l1.ixigua.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-rtmp-l1.ixigua.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4749", "label": "sdkoptedge.chinanetcenter.com.wscdns.com", "shape": "dot", "size": 15.234113712374581, "title": "sdkoptedge.chinanetcenter.com.wscdns.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027sdkoptedge.chinanetcenter.com.wscdns.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4690", "label": "pull-hls-f1.douyinliving.com.wswebcdn.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-hls-f1.douyinliving.com.wswebcdn.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-hls-f1.douyinliving.com.wswebcdn.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4677", "label": "pull-lls-f1.douyinliving.com.wswebcdn.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-lls-f1.douyinliving.com.wswebcdn.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-lls-f1.douyinliving.com.wswebcdn.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4664", "label": "pull-flv-f1.douyinliving.com.wswebcdn.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-flv-f1.douyinliving.com.wswebcdn.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-flv-f1.douyinliving.com.wswebcdn.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4731", "label": "pull-tsl-f1.douyinliving.com.wswebcdn.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-tsl-f1.douyinliving.com.wswebcdn.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-tsl-f1.douyinliving.com.wswebcdn.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4638", "label": "pull-flv-q1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-flv-q1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-flv-q1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4611", "label": "pull-hls-q1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-hls-q1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-hls-q1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4626", "label": "pull-tsl-q1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-tsl-q1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-tsl-q1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4521", "label": "pull-lls-q1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-lls-q1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-lls-q1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4413", "label": "pull-rtmp-q1.douyincdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-rtmp-q1.douyincdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-rtmp-q1.douyincdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4286", "label": "v22.kwaicdn.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "v22.kwaicdn.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027v22.kwaicdn.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4216", "label": "ws.push.yximgs.com.wscdns.com", "shape": "dot", "size": 15.234113712374581, "title": "ws.push.yximgs.com.wscdns.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027ws.push.yximgs.com.wscdns.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "4139", "label": "down.anticheatexpert.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "down.anticheatexpert.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027down.anticheatexpert.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "3578", "label": "overseavivo.chinanetcenter.com.cdn20.com", "shape": "dot", "size": 16.17056856187291, "title": "overseavivo.chinanetcenter.com.cdn20.com\n\u8fde\u63a5\u6570: 11\n{\u0027name\u0027: \u0027overseavivo.chinanetcenter.com.cdn20.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "3589", "label": "vivomaa.chinanetcenter.com.wsglb0.com", "shape": "dot", "size": 15.234113712374581, "title": "vivomaa.chinanetcenter.com.wsglb0.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027vivomaa.chinanetcenter.com.wsglb0.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "3488", "label": "ws-rwk.pull.etoote.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "ws-rwk.pull.etoote.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027ws-rwk.pull.etoote.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "3274", "label": "ad.12306.cn.wscdns.com", "shape": "dot", "size": 15.234113712374581, "title": "ad.12306.cn.wscdns.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027ad.12306.cn.wscdns.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "2986", "label": "exservice.12306.cn.wsglb0.com", "shape": "dot", "size": 15.234113712374581, "title": "exservice.12306.cn.wsglb0.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027exservice.12306.cn.wsglb0.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "2919", "label": "mobile.12306.cn.lxdns.com", "shape": "dot", "size": 15.234113712374581, "title": "mobile.12306.cn.lxdns.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027mobile.12306.cn.lxdns.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "815", "label": "ws-p2p-v2.pull.yximgs.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "ws-p2p-v2.pull.yximgs.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027ws-p2p-v2.pull.yximgs.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "836", "label": "ws-p2p.pull.yximgs.com.gccdn.net", "shape": "dot", "size": 16.17056856187291, "title": "ws-p2p.pull.yximgs.com.gccdn.net\n\u8fde\u63a5\u6570: 11\n{\u0027name\u0027: \u0027ws-p2p.pull.yximgs.com.gccdn.net\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "677", "label": "ws-origin.pull.yximgs.com.gccdn.net", "shape": "dot", "size": 16.17056856187291, "title": "ws-origin.pull.yximgs.com.gccdn.net\n\u8fde\u63a5\u6570: 11\n{\u0027name\u0027: \u0027ws-origin.pull.yximgs.com.gccdn.net\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "124", "label": "ws-adaptive.pull.yximgs.com.gccdn.net", "shape": "dot", "size": 16.287625418060202, "title": "ws-adaptive.pull.yximgs.com.gccdn.net\n\u8fde\u63a5\u6570: 12\n{\u0027name\u0027: \u0027ws-adaptive.pull.yximgs.com.gccdn.net\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "147", "label": "ws.pull.yximgs.com.gccdn.net", "shape": "dot", "size": 16.287625418060202, "title": "ws.pull.yximgs.com.gccdn.net\n\u8fde\u63a5\u6570: 12\n{\u0027name\u0027: \u0027ws.pull.yximgs.com.gccdn.net\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6104", "label": "pull-rtmp-l1-xg.ixigua.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-rtmp-l1-xg.ixigua.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-rtmp-l1-xg.ixigua.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6027", "label": "vodtkcache.p2p.haplat.net.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "vodtkcache.p2p.haplat.net.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027vodtkcache.p2p.haplat.net.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6084", "label": "p2pstuntest.haplat.net.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "p2pstuntest.haplat.net.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027p2pstuntest.haplat.net.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6127", "label": "pull-flv-f1-xg.bytecdn.cn.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-flv-f1-xg.bytecdn.cn.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-flv-f1-xg.bytecdn.cn.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6194", "label": "mamba.vodtkcache.p2p.haplat.net.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "mamba.vodtkcache.p2p.haplat.net.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027mamba.vodtkcache.p2p.haplat.net.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6336", "label": "pull-flv-hs-l1-xg.ixigua.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-flv-hs-l1-xg.ixigua.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-flv-hs-l1-xg.ixigua.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6413", "label": "pull-rtmp-l1-xg.bytecdn.cn.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-rtmp-l1-xg.bytecdn.cn.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-rtmp-l1-xg.bytecdn.cn.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6486", "label": "pull-flv-l1-xg.ixigua.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-flv-l1-xg.ixigua.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-flv-l1-xg.ixigua.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6549", "label": "mamba.vodtkcachev6bk.p2p.haplat.net.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "mamba.vodtkcachev6bk.p2p.haplat.net.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027mamba.vodtkcachev6bk.p2p.haplat.net.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6569", "label": "pull-rtmp-f1-xg.bytecdn.cn.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-rtmp-f1-xg.bytecdn.cn.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-rtmp-f1-xg.bytecdn.cn.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6576", "label": "pull-flv-l1-xg.bytecdn.cn.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-flv-l1-xg.bytecdn.cn.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-flv-l1-xg.bytecdn.cn.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6649", "label": "push-rtmp-l1.ixigua.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "push-rtmp-l1.ixigua.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027push-rtmp-l1.ixigua.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6805", "label": "pull-rtmp-hs-l1-xg.ixigua.com.wsdvs.com", "shape": "dot", "size": 15.234113712374581, "title": "pull-rtmp-hs-l1-xg.ixigua.com.wsdvs.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027pull-rtmp-hs-l1-xg.ixigua.com.wsdvs.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "6961", "label": "beauty-kuai-flv.meituan.net.live.ksydns.com", "shape": "dot", "size": 15.234113712374581, "title": "beauty-kuai-flv.meituan.net.live.ksydns.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027beauty-kuai-flv.meituan.net.live.ksydns.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "7087", "label": "beauty-kuai-flv-live.meituan.net.live.ksydns.com", "shape": "dot", "size": 15.234113712374581, "title": "beauty-kuai-flv-live.meituan.net.live.ksydns.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027beauty-kuai-flv-live.meituan.net.live.ksydns.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "7552", "label": "push.12306.cn.wsglb0.com", "shape": "dot", "size": 15.234113712374581, "title": "push.12306.cn.wsglb0.com\n\u8fde\u63a5\u6570: 3\n{\u0027name\u0027: \u0027push.12306.cn.wsglb0.com\u0027}"}, {"color": "#3357FF", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5297", "label": "p2.ssl.qhimg.com.qh-cdn.com", "shape": "dot", "size": 16.17056856187291, "title": "p2.ssl.qhimg.com.qh-cdn.com\n\u8fde\u63a5\u6570: 11\n{\u0027name\u0027: \u0027p2.ssl.qhimg.com.qh-cdn.com\u0027}"}, {"color": "#33FF57", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "131", "label": "dns3.cdn20.org.", "shape": "dot", "size": 18.160535117056856, "title": "dns3.cdn20.org.\n\u8fde\u63a5\u6570: 28\n{\u0027name\u0027: \u0027dns3.cdn20.org.\u0027}"}, {"color": "#33FF57", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "135", "label": "dns1.cdn20.org.", "shape": "dot", "size": 19.096989966555185, "title": "dns1.cdn20.org.\n\u8fde\u63a5\u6570: 36\n{\u0027name\u0027: \u0027dns1.cdn20.org.\u0027}"}, {"color": "#33FF57", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "137", "label": "dns4.cdn20.info.", "shape": "dot", "size": 19.096989966555185, "title": "dns4.cdn20.info.\n\u8fde\u63a5\u6570: 36\n{\u0027name\u0027: \u0027dns4.cdn20.info.\u0027}"}, {"color": "#FF5733", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "3581", "label": "cdn20.com", "shape": "dot", "size": 30.80267558528428, "title": "cdn20.com\n\u8fde\u63a5\u6570: 136\n{\u0027name\u0027: \u0027cdn20.com\u0027}"}, {"color": "#FF5733", "distance": 100, "font": {"color": "black", "face": "Arial", "size": 10, "strokeWidth": 0}, "id": "5281", "label": "cdnmg.com", "shape": "dot", "size": 29.86622073578595, "title": "cdnmg.com\n\u8fde\u63a5\u6570: 128\n{\u0027name\u0027: \u0027cdnmg.com\u0027}"}]);
-                  edges = new vis.DataSet([{"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "128", "label": "auth_by", "to": "133"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "128", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5305", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5268", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5330", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5155", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5192", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5132", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5129", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5046", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4989", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4749", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4690", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4677", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4664", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4731", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4638", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4611", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4626", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4521", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4413", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4286", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4216", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "4139", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3578", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3589", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3488", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3274", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "2986", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "2919", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "815", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "836", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "677", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "124", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "147", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6104", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6027", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6084", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6127", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6194", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6336", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6413", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6486", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6549", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6569", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6576", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6649", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6805", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "6961", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "7087", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "7552", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5297", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "128", "label": "auth_by", "to": "131"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "147", "label": "auth_by", "to": "131"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "124", "label": "auth_by", "to": "131"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "677", "label": "auth_by", "to": "131"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "836", "label": "auth_by", "to": "131"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3578", "label": "auth_by", "to": "131"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5297", "label": "auth_by", "to": "131"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "128", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "147", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "124", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "677", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "836", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3578", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5297", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "128", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "147", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "124", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "677", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "836", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3578", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5297", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3581", "label": "auth_by", "to": "133"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3581", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3581", "label": "auth_by", "to": "131"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3581", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "3581", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5281", "label": "auth_by", "to": "133"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5281", "label": "auth_by", "to": "137"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5281", "label": "auth_by", "to": "135"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5281", "label": "auth_by", "to": "129"}, {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": "#A5ABB6", "font": {"color": "#A5ABB6", "size": 10}, "from": "5281", "label": "auth_by", "to": "131"}]);
-
-                  nodeColors = {};
-                  allNodes = nodes.get({ returnType: "Object" });
-                  for (nodeId in allNodes) {
-                    nodeColors[nodeId] = allNodes[nodeId].color;
-                  }
-                  allEdges = edges.get({ returnType: "Object" });
-                  // adding nodes and edges to the graph
-                  data = {nodes: nodes, edges: edges};
-
-                  var options = {"physics": {"enabled": true, "forceAtlas2Based": {"gravitationalConstant": -50, "centralGravity": 0.01, "springLength": 20, "springConstant": 0.08, "damping": 0.4, "avoidOverlap": 0}, "stabilization": {"enabled": true, "iterations": 150}}};
-
-                  
-
-
-                  
-
-                  network = new vis.Network(container, data, options);
-
-                  
-
-                  
-
-                  
-
-
-                  
-
-                  return network;
-
-              }
-              drawGraph();
-        </script>
-    </body>
+        // 更新统计信息
+        document.getElementById('node-count').textContent = nodes.length;
+        document.getElementById('edge-count').textContent = edges.length;
+        
+        // 网络容器
+        const container = document.getElementById('mynetwork');
+        
+        // 网络数据
+        const data = {
+            nodes: nodes,
+            edges: edges
+        };
+        
+        // 网络配置选项
+        const options = {
+            physics: {
+                enabled: true,
+                barnesHut: {
+                    springLength: 180, // 增加节点之间的距离
+                    springConstant: 0.04,
+                    damping: 0.09,
+                    avoidOverlap: 0.1
+                },
+                stabilization: {
+                    enabled: true,
+                    iterations: 150
+                }
+            },
+            nodes: {
+                shape: 'dot',
+                font: {
+                    size: 12,
+                    color: '#000000'
+                },
+                borderWidth: 2,
+                shadow: true
+            },
+            edges: {
+                arrows: {
+                    to: {
+                        enabled: true,
+                        scaleFactor: 0.5
+                    }
+                },
+                color: {
+                    color: '#848484',
+                    highlight: '#848484',
+                    hover: '#848484'
+                },
+                font: {
+                    size: 10,
+                    color: '#666666'
+                },
+                smooth: {
+                    type: 'continuous'
+                }
+            },
+            interaction: {
+                hover: true,
+                tooltipDelay: 200
+            }
+        };
+        
+        // 创建网络
+        const network = new vis.Network(container, data, options);
+        
+        // 网络事件处理
+        network.on('click', function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node = nodes.get(nodeId);
+                console.log('点击节点:', node);
+            }
+        });
+        
+        network.on('hoverNode', function(params) {
+            container.style.cursor = 'pointer';
+        });
+        
+        network.on('blurNode', function(params) {
+            container.style.cursor = 'default';
+        });
+        
+        // 工具函数
+        function fitNetwork() {
+            network.fit({
+                animation: {
+                    duration: 1000,
+                    easingFunction: 'easeInOutQuad'
+                }
+            });
+        }
+        
+        function resetView() {
+            network.moveTo({
+                position: {x: 0, y: 0},
+                scale: 1,
+                animation: {
+                    duration: 1000,
+                    easingFunction: 'easeInOutQuad'
+                }
+            });
+        }
+        
+        // 页面加载完成后适应窗口
+        window.addEventListener('load', function() {
+            setTimeout(fitNetwork, 1000);
+        });
+    </script>
+</body>
 </html>

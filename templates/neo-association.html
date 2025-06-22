@@ -187,15 +187,18 @@
             physics: {
                 enabled: true,
                 barnesHut: {
-                    springLength: 180, // 增加节点之间的距离
-                    springConstant: 0.04,
-                    damping: 0.09,
-                    avoidOverlap: 0.1
+                    springLength: 200, // 增加节点之间的距离
+                    springConstant: 0.02, // 降低弹簧常数，减少弹性
+                    damping: 0.15, // 增加阻尼，减少震荡
+                    avoidOverlap: 0.2 // 增加避免重叠的力度
                 },
                 stabilization: {
                     enabled: true,
-                    iterations: 150
-                }
+                    iterations: 200, // 增加稳定化迭代次数
+                    updateInterval: 25 // 降低更新频率
+                },
+                minVelocity: 0.75, // 设置最小速度阈值
+                maxVelocity: 15 // 限制最大速度
             },
             nodes: {
                 shape: 'dot',
